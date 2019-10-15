@@ -8,9 +8,8 @@ public class Plane extends Agent
 	int flightHours;
 	int fuelLeft;
 	
-    protected void setup() 
+	protected void setup() 
     {
-    	
     	Object[] args = getArguments();
     	
      	String s = (String) args[0];
@@ -27,8 +26,8 @@ public class Plane extends Agent
                 int n=0;
                 
                 public void action() 
-                {
-                	System.out.println( "Hello World! My name is " + getLocalName() + " I have " + fuelLeft +" fuel left and can fligh more " +  flightHours);
+                {	
+                    System.out.println( "Hello World! My name is " + getLocalName() + " I have " + fuelLeft +" fuel left and can fligh more " +  flightHours);
                     n++;
                 }
         
