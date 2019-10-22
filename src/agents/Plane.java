@@ -1,4 +1,9 @@
 package agents;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.LinkedList;
+
 import jade.core.AID;
 import jade.domain.AMSService;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
@@ -10,78 +15,49 @@ import jade.lang.acl.ACLMessage;
 @SuppressWarnings("serial")
 public class Plane extends Agent 
 {       
-	int flightHours;
+	int predictedHours;
 	int fuelLeft;
+	int speed;
+	float timeleft;
+	int money;
+	
+	Queue<Integer> route = new LinkedList<>(); 
+	
+	HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
+	HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
+	
 	AMSAgentDescription [] agents = null;
 	AID myID;
 	ACLMessage msg = null;
+	
+	String goal;								//money, time, fuel, etc
+	String type;                                //competitive, cooperative 
 	
 	@SuppressWarnings("deprecation")
 	protected void setup() 
     {
     	Object[] args = getArguments();
      	String s = (String) args[0];
-     	String[] split = s.split(" ");
+     	String[] splitInfo = s.split(" ");
 
-    	flightHours = Integer.parseInt(split[0]);
-    	fuelLeft = Integer.parseInt(split[1]);
+    	actualPos.put("x", Integer.parseInt(splitInfo[0]));
     	
-    	try {
-    		SearchConstraints c = new SearchConstraints();
-    		c.setMaxResults(new Long(-1));
-    		agents = AMSService.search(this, new AMSAgentDescription (), c);
-    	} catch (Exception e) {
-    		
-    	}
-    	
-    	myID = getAID();
+    	System.out.println(actualPos.get("x"));
     	
         addBehaviour( 
+        		new SimpleBehaviour( this ) 
+        		{
 
-            new SimpleBehaviour( this ) 
-            {
-                int n=0;
-                
-                public void action() 
-                {	
-                	String name = getLocalName();
+					@Override
+					public void action() {
+						
+					}
 
-                	if(name.equals("JESUS2") && msg == null) {
-                		
-	                    n++;
-	                    
-	                    msg = new ACLMessage(ACLMessage.REFUSE);
-	                	msg.setContent("Hi! Wanna date?");
-	                	
-	                	for (int i =  0; i < agents.length; i++) {
-	                		//if (!agents[i].getName().getLocalName().contentEquals(name))
-	                		msg.addReceiver(agents[i].getName());
-	                	}
-	                	
-	                	send(msg);
-	                	
-                	} else {
-                		msg = receive();
-                		            		
-                		if(msg != null) {
-                			System.out.println("Im " + getLocalName() + " and I recieve: " + msg.getContent() + " from " + msg.getSender());
-                			if(!name.equals("JESUS2")) {
-                			
-                				ACLMessage reply = msg.createReply();
-                				reply.setPerformative(ACLMessage.INFORM);
-                				reply.setContent("YESSSSSSS!!!!");
-                				send(reply);
-                			}
-                		}
-                		block();
-                	}
-	                	
-                }
-        
-                public boolean done() {  
-                	return n>=2;  
-                }
-            }
-        );
-    }  
+					@Override
+					public boolean done() {
+						return false;
+					}  
+        			
+        		});
+    	}  
 } 

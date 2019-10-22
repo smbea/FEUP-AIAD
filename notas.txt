@@ -1,0 +1,44 @@
+avião
+   - [posição inicial]
+   - posição atual (atualizada pelo avião)
+   - posição final
+   - rota
+   - combustivel
+   - velocidade
+   - tempo ate ao destino
+   - dinheiro
+   - goal
+   - type
+
+entidade - comunica qnd dois aviões entram em periferia
+
+Plane(posIni (x, y) , posFin (x, y), combustivel, velocidade, tempo, money, goal, type)
+
+ARRAY [ 
+	[A][ ][ ][ ][ ] 
+	[ ][ ][ ][ ][ ]
+	[ ][ ][ ][ ][ ]
+	[ ][ ][A][ ][ ]
+	[ ][ ][ ][ ][ ]
+      ]
+
+Dado do tipo Aviao { rota; PosFinal; ID}
+
+rota: UP, DOWN, LEFT, RIGHT, DDR, DDL, DUR, DUL
+
+Notas:
+
+negociaçao monetaria para dois competitivos. 
+diferentes atitudes (guloso, cauteloso, etc)
+
+Demonstrar agentes e objetivos; 
+Demonstrar comunicação; (exchange message)
+Demonstrar resultado da comunicação. estado de terminação;
+
+Dimensão reduzida inicialmente; expandir para segunda parte; 5-10 máximo.
+
+Objetivos:
+Rapidez, monetário, poupança de combustivel, no goal
+
+
+Descentralizada > centralizada 
