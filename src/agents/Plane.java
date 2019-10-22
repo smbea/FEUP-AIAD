@@ -18,7 +18,7 @@ public class Plane extends Agent
 	int predictedHours;
 	int fuelLeft;
 	int speed;
-	float timeleft;
+	float timeLeft;
 	int money;
 	
 	Queue<Integer> route = new LinkedList<>(); 
@@ -41,8 +41,22 @@ public class Plane extends Agent
      	String[] splitInfo = s.split(" ");
 
     	actualPos.put("x", Integer.parseInt(splitInfo[0]));
+    	actualPos.put("y", Integer.parseInt(splitInfo[1]));
+    	fuelLeft = Integer.parseInt(splitInfo[2]);
+    	speed = Integer.parseInt(splitInfo[3]);
+    	timeLeft = Integer.parseInt(splitInfo[4]);
+    	money = Integer.parseInt(splitInfo[5]);
+    	goal = splitInfo[6];
+    	type = splitInfo[7];
     	
-    	System.out.println(actualPos.get("x"));
+    	System.out.println("name: " + myID.getLocalName());
+    	System.out.println("x = " + actualPos.get("x") + ", y = " + actualPos.get("y"));
+    	System.out.println("fuel left = " + fuelLeft);
+    	System.out.println("speed = " + speed);
+    	System.out.println("time left = " + timeLeft);
+    	System.out.println("money = " + money);
+    	System.out.println("goal = " + goal);
+    	System.out.println("type = " + type);
     	
         addBehaviour( 
         		new SimpleBehaviour( this ) 
