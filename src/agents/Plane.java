@@ -1,13 +1,12 @@
 package agents;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.List;
 
 import jade.core.AID;
-import jade.domain.AMSService;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
-import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
@@ -20,11 +19,17 @@ public class Plane extends Agent
 	int speed;
 	float timeLeft;
 	int money;
+	int movementCost = 200;
+	String name;
+	boolean finished = false;
+	boolean comm = false;
 	
-	Queue<Integer> route = new LinkedList<>(); 
+	Queue<String> route = new LinkedList<>(); 
 	
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
+	
+	String[][] traffic = new String[5][5];
 	
 	AMSAgentDescription [] agents = null;
 	AID myID;
@@ -33,45 +38,151 @@ public class Plane extends Agent
 	String goal;								//money, time, fuel, etc
 	String type;                                //competitive, cooperative 
 	
-	@SuppressWarnings("deprecation")
-	protected void setup() 
-    {
-    	Object[] args = getArguments();
+	/**
+	 * Parsing arguments and create route hardcoded for each agent (need to change)
+	 */
+	protected void argParsing() {
+		Object[] args = getArguments();
      	String s = (String) args[0];
      	String[] splitInfo = s.split(" ");
 
     	actualPos.put("x", Integer.parseInt(splitInfo[0]));
     	actualPos.put("y", Integer.parseInt(splitInfo[1]));
-    	fuelLeft = Integer.parseInt(splitInfo[2]);
-    	speed = Integer.parseInt(splitInfo[3]);
-    	timeLeft = Integer.parseInt(splitInfo[4]);
-    	money = Integer.parseInt(splitInfo[5]);
-    	goal = splitInfo[6];
-    	type = splitInfo[7];
     	
-    	System.out.println("name: " + myID.getLocalName());
-    	System.out.println("x = " + actualPos.get("x") + ", y = " + actualPos.get("y"));
-    	System.out.println("fuel left = " + fuelLeft);
-    	System.out.println("speed = " + speed);
-    	System.out.println("time left = " + timeLeft);
-    	System.out.println("money = " + money);
-    	System.out.println("goal = " + goal);
-    	System.out.println("type = " + type);
+    	finalPos.put("x", Integer.parseInt(splitInfo[2]));
+    	finalPos.put("y", Integer.parseInt(splitInfo[3]));
     	
-        addBehaviour( 
-        		new SimpleBehaviour( this ) 
-        		{
-
-					@Override
-					public void action() {
+    	fuelLeft = Integer.parseInt(splitInfo[4]);
+    	speed = Integer.parseInt(splitInfo[5]);
+    	timeLeft = Integer.parseInt(splitInfo[6]);
+    	money = Integer.parseInt(splitInfo[7]);
+    	goal = (String) splitInfo[8];
+    	type = (String) splitInfo[9];
+    	name = getLocalName();
+    	
+    	//hardcoded need to change in the future
+    	
+    	if(name.equals("Jesus2")) {
+    		route.add("DDR");
+    		route.add("DDR");
+    		route.add("DDR");
+    		route.add("DDR");
+    	} else {
+    		route.add("DUL");
+    		route.add("DUL");
+    		route.add("DUL");
+    	}
+	}
+	
+	protected void move() {
+		String nextMove = route.remove();
+		switch (nextMove) {
+		case "DDR":
+			actualPos.replace("x", actualPos.get("x") + 1);
+			actualPos.replace("y", actualPos.get("y") + 1);
+			break;
+		case "DDL":
+			actualPos.replace("x", actualPos.get("x") + 1);
+			actualPos.replace("y", actualPos.get("y") - 1);
+			break;
+		case "DUL":
+			actualPos.replace("x", actualPos.get("x") - 1);
+			actualPos.replace("y", actualPos.get("y") - 1);
+			break;		
+		case "DUR":
+			actualPos.replace("x", actualPos.get("x") - 1);
+			actualPos.replace("y", actualPos.get("y") + 1);
+			break;
+		case "U":
+			actualPos.replace("x", actualPos.get("x") - 1);
+			break;
+		case "D":
+			actualPos.replace("x", actualPos.get("x") + 1);
+			break;
+		case "R":
+			actualPos.replace("y", actualPos.get("y") + 1);
+			break;
+		case "L":
+			actualPos.replace("y", actualPos.get("y") - 1);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	protected void refactorTrafficArray(String trafficS) {
+		String[] strings = trafficS.replace("[", "").replace("]", ">").split(", ");
+        List<String> stringList = new ArrayList<>();
+        List<String[]> tempResult = new ArrayList<>();
+        for(String str : strings) {
+            if(str.endsWith(">")) {
+               str = str.substring(0, str.length() - 1);
+               if(str.endsWith(">")) {
+                   str = str.substring(0, str.length() - 1);
+               }
+               stringList.add(str);
+               tempResult.add(stringList.toArray(new String[stringList.size()]));
+                stringList = new ArrayList<>();
+            } else {
+                stringList.add(str);
+            }
+        }
+        traffic = tempResult.toArray(new String[tempResult.size()][]);
+	}
+	
+	protected void printTraffic() {
+		for (int i = 0; i < traffic.length; i++) {
+			for (int j = 0; j < traffic[i].length; j++) {
+				System.out.print(traffic[i][j] + " ");
+			}
+			System.out.println();
+		}
+	}
+	
+	protected void setup() 
+    {
+		argParsing();
+		
+		Behaviour movement = new TickerBehaviour(this, (movementCost/speed)*1000) {
+			
+			@Override
+			protected void onTick() {
+				if(actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
+					System.out.println("I " + name + " arrived at destiny");
+					finished = true;
+					stop();
+				}
+				
+				if(name.equals("Jesus2") && !finished) {
+					move();
+					comm = false;
+					addBehaviour(new SimpleBehaviour() {
 						
-					}
-
-					@Override
-					public boolean done() {
-						return false;
-					}  
-        			
-        		});
-    	}  
+						@Override
+						public boolean done() {
+							return comm;
+						}
+						
+						@Override
+						public void action() {
+							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+							msg.setContent("traffic " + actualPos.get("x") + " " + actualPos.get("y"));
+							msg.addReceiver(getAID("control"));
+							send(msg);
+							
+							ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
+							answer = blockingReceive();
+							String s = answer.getContent();
+							refactorTrafficArray(s);
+							printTraffic();
+							comm = true;
+						}
+					});
+					System.out.println("I " + name + " moved");
+				}
+			}
+		};
+		
+		addBehaviour(movement);
+    }  
 } 
