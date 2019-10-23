@@ -3,6 +3,7 @@
 MTPs-Main-Container.txt
 APDescription.txt
 FEUP-AIAD.iml
+.classpath
 
 # Created by https://www.gitignore.io/api/macos,eclipse,intellij
 # Edit at https://www.gitignore.io/?templates=macos,eclipse,intellij
