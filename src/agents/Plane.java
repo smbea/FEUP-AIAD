@@ -139,6 +139,71 @@ public class Plane extends Agent
 		}
 	}
 	
+	protected String checkConflict() {
+
+		int actX = actualPos.get("x");
+		int actY = actualPos.get("y");
+		int size = traffic.length;
+		
+		//check DDR
+		if(actX + 1 < size && actY + 1 < size) {
+			if(!traffic[actX + 1][actY + 1].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		//check DDL
+		if(actX + 1 < size && actY - 1 >= 0) {
+			if(!traffic[actX + 1][actY - 1].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		//check DUL
+		if(actX - 1 >= 0 && actY - 1 >= 0) {
+			if(!traffic[actX - 1][actY - 1].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		//check DUR
+		if(actX - 1 >= 0 && actY + 1 < size) {
+			if(!traffic[actX + 1][actY - 1].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		//check U
+		if(actX - 1 >= 0) {
+			if(!traffic[actX - 1][actY].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		//check D
+		if(actX + 1 < size) {
+			if(!traffic[actX + 1][actY].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		//check R
+		if(actY + 1 < size) {
+			if(!traffic[actX][actY + 1].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		//check L
+		if(actY - 1 >= 0) {
+			if(!traffic[actX][actY - 1].equals("null")) {
+				return traffic[actX + 1][actY + 1];
+			}
+		}
+		
+		return "none";
+	}
+	
 	protected void setup() 
     {
 		argParsing();
@@ -174,7 +239,11 @@ public class Plane extends Agent
 							answer = blockingReceive();
 							String s = answer.getContent();
 							refactorTrafficArray(s);
-							printTraffic();
+							String conflictPlane = checkConflict();
+							if(!conflictPlane.equals("none")){
+								System.out.println("Conflicted detected!! Starting negotiations with " + conflictPlane);
+								stop();
+							}
 							comm = true;
 						}
 					});
