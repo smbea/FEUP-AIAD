@@ -23,6 +23,10 @@ public class Plane extends Agent
 	String name;
 	boolean finished = false;
 	boolean comm = false;
+	boolean negot = false;
+	String conflictPlane = "none";
+	String cidBase;
+	protected static int cidCnt = 0;
 	
 	Queue<String> route = new LinkedList<>(); 
 	
@@ -33,7 +37,6 @@ public class Plane extends Agent
 	
 	AMSAgentDescription [] agents = null;
 	AID myID;
-	ACLMessage msg = null;
 	
 	String goal;								//money, time, fuel, etc
 	String type;                                //competitive, cooperative 
@@ -74,6 +77,12 @@ public class Plane extends Agent
     	}
 	}
 	
+	protected String genCID() {
+		if(cidBase == null) {
+			cidBase = getLocalName() + hashCode() + System.currentTimeMillis()%10000 + "_";
+		}
+		return cidBase + (cidCnt++);
+	}
 	protected void move() {
 		String nextMove = route.remove();
 		switch (nextMove) {
@@ -221,6 +230,8 @@ public class Plane extends Agent
 				if(name.equals("Jesus2") && !finished) {
 					move();
 					comm = false;
+					negot = false;
+					conflictPlane = "none";
 					addBehaviour(new SimpleBehaviour() {
 						
 						@Override
@@ -239,10 +250,25 @@ public class Plane extends Agent
 							answer = blockingReceive();
 							String s = answer.getContent();
 							refactorTrafficArray(s);
-							String conflictPlane = checkConflict();
+							conflictPlane = checkConflict();
 							if(!conflictPlane.equals("none")){
 								System.out.println("Conflicted detected!! Starting negotiations with " + conflictPlane);
-								stop();
+								addBehaviour(new SimpleBehaviour() {
+									
+									@Override
+									public boolean done() {
+										return negot;
+									}
+									
+									@Override
+									public void action() {
+										ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+										msg.setContent("negotiation");
+										msg.addReceiver(getAID(conflictPlane));
+										send(msg);
+									}
+								});
+								
 							}
 							comm = true;
 						}
