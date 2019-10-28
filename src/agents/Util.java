@@ -10,6 +10,7 @@ public class Util
 {       
 	int movementCost = 200;
 	int fuelConsumptionByMove = 1;
+	ArrayList<String> conflicts = new ArrayList<String>();
 	
 	String genCID(String cidBase, int cidCnt, String name) {
 		if(cidBase == null) {
@@ -93,6 +94,7 @@ public class Util
 		//check DDR
 		if(actX + 1 < size && actY + 1 < size) {
 			if(!traffic[actX + 1][actY + 1].equals("null")) {
+				conflicts.add(traffic[actX + 1][actY + 1]);
 				return traffic[actX + 1][actY + 1];
 			}
 		}
@@ -100,49 +102,56 @@ public class Util
 		//check DDL
 		if(actX + 1 < size && actY - 1 >= 0) {
 			if(!traffic[actX + 1][actY - 1].equals("null")) {
-				return traffic[actX + 1][actY + 1];
+				conflicts.add(traffic[actX + 1][actY - 1]);
+				return traffic[actX + 1][actY - 1];
 			}
 		}
 		
 		//check DUL
 		if(actX - 1 >= 0 && actY - 1 >= 0) {
 			if(!traffic[actX - 1][actY - 1].equals("null")) {
-				return traffic[actX + 1][actY + 1];
+				conflicts.add(traffic[actX - 1][actY - 1]);
+				return traffic[actX - 1][actY - 1];
 			}
 		}
 		
 		//check DUR
 		if(actX - 1 >= 0 && actY + 1 < size) {
-			if(!traffic[actX + 1][actY - 1].equals("null")) {
-				return traffic[actX + 1][actY + 1];
+			if(!traffic[actX - 1][actY + 1].equals("null")) {
+				conflicts.add(traffic[actX - 1][actY + 1]);
+				return traffic[actX - 1][actY + 1];
 			}
 		}
 		
 		//check U
 		if(actX - 1 >= 0) {
 			if(!traffic[actX - 1][actY].equals("null")) {
-				return traffic[actX + 1][actY + 1];
+				conflicts.add(traffic[actX - 1][actY]);
+				return traffic[actX - 1][actY];
 			}
 		}
 		
 		//check D
 		if(actX + 1 < size) {
 			if(!traffic[actX + 1][actY].equals("null")) {
-				return traffic[actX + 1][actY + 1];
+				conflicts.add(traffic[actX + 1][actY]);
+				return traffic[actX + 1][actY];
 			}
 		}
 		
 		//check R
 		if(actY + 1 < size) {
 			if(!traffic[actX][actY + 1].equals("null")) {
-				return traffic[actX + 1][actY + 1];
+				conflicts.add(traffic[actX][actY + 1]);
+				return traffic[actX][actY + 1];
 			}
 		}
 		
 		//check L
 		if(actY - 1 >= 0) {
 			if(!traffic[actX][actY - 1].equals("null")) {
-				return traffic[actX + 1][actY + 1];
+				conflicts.add(traffic[actX][actY - 1]);
+				return traffic[actX][actY - 1];
 			}
 		}
 		

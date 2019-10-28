@@ -73,17 +73,28 @@ public class PlaneComp extends Agent
 			
 			@Override
 			protected void onTick() {
+				System.out.println("New tick for " + name);
+				
 				if(actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
 					System.out.println("I " + name + " arrived at destiny");
 					finished = true;
 					stop();
 				}
 				
+				System.out.println("negot = " + negot + ", conflict = " + conflictPlane);
+				
 				if(name.equals("Comp") && !finished) {
 					if (!negot) {
-						util.move(route, actualPos);
+						if(conflictPlane.equals("none") || !util.conflicts.contains(name)){
+							System.out.println("antes de move de " + name);
+							util.printTraffic(traffic);
+							util.move(route, actualPos);
+						} else {
+							negot = true;
+						}
+					} else {
+						block();
 					}
-					conflictPlane = "none";
 					addBehaviour(new SimpleBehaviour() {
 						
 						@Override
@@ -93,10 +104,14 @@ public class PlaneComp extends Agent
 						
 						@Override
 						public void action() {
+							try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("traffic " + actualPos.get("x") + " " + actualPos.get("y"));
 							msg.addReceiver(getAID("control"));
 							send(msg);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
 							
 							ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
 							answer = blockingReceive();
@@ -106,6 +121,8 @@ public class PlaneComp extends Agent
 					        
 					        System.out.println();
 							conflictPlane = util.checkConflict(actualPos, traffic);
+							System.out.println("recebou grelha o " + name);
+							util.printTraffic(traffic);
 							if(!conflictPlane.equals("none")){
 								negot = true;
 								System.out.println("Conflicted detected!! Starting negotiations with " + conflictPlane);
@@ -129,8 +146,9 @@ public class PlaneComp extends Agent
 							comm = true;
 						}
 					});
-					System.out.println("I " + name + " moved");
+					System.out.println("actions end for " + name);
 				}
+				System.out.println("ticket ends for "+ name);
 			}
 		};
 		
