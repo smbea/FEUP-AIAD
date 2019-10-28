@@ -42,3 +42,18 @@ Rapidez, monetÃ¡rio, poupanÃ§a de combustivel, no goal
 
 
 Descentralizada > centralizada 
+
+-----------------------------------------------------------------
+Estratégias:
+	- dominante: estratégia melhor ou igual
+	- pura: exact action
+	- mixed: atribui probabilidade acada estratégia pura
+	- ......
+	- manipulativa: preferências declaradas != verdadeiras preferências
+
+- mechanism design: maximizar individual payoff
+- auctions: chegar a acordo em como alocar recursos escassos de agentes
+	
+Negociações:
+	- time dependent
+	- conflict deal
