@@ -8,9 +8,9 @@ import java.util.Queue;
 @SuppressWarnings("serial")
 public class Util 
 {       
-	int movementCost = 200;
-	int fuelConsumptionByMove = 1;
-	ArrayList<String> conflicts = new ArrayList<String>();
+	static int movementCost = 200;
+	static int fuelConsumptionByMove = 1;
+	static HashMap<String, String> conflicts = new HashMap<String, String>();
 	
 	String genCID(String cidBase, int cidCnt, String name) {
 		if(cidBase == null) {
@@ -19,7 +19,7 @@ public class Util
 		return cidBase + (cidCnt++);
 	}
 	 
-	void move(Queue<String> route, HashMap<String, Integer> actualPos) {
+	static void move(Queue<String> route, HashMap<String, Integer> actualPos) {
 		String nextMove = route.remove();
 		switch (nextMove) {
 		case "DDR":
@@ -55,7 +55,7 @@ public class Util
 		}
 	}
 	
-	String[][] refactorTrafficArray(String trafficS) {
+	static String[][] refactorTrafficArray(String trafficS) {
 		String[] strings = trafficS.replace("[", "").replace("]", ">").split(", ");
         List<String> stringList = new ArrayList<>();
         List<String[]> tempResult = new ArrayList<>();
@@ -75,7 +75,7 @@ public class Util
         return tempResult.toArray(new String[tempResult.size()][]);        
 	}
 	
-	void printTraffic(String[][] traffic) {
+	static void printTraffic(String[][] traffic) {
 		System.out.println();
 		for (int i = 0; i < traffic.length; i++) {
 			for (int j = 0; j < traffic[i].length; j++) {
@@ -86,23 +86,29 @@ public class Util
 		System.out.println();
 	}
 	
-	String checkConflict(HashMap<String, Integer> actualPos, String[][] traffic) {
+	static String checkConflict(HashMap<String, Integer> actualPos, String[][] traffic, String name) {
 		int actX = actualPos.get("x");
 		int actY = actualPos.get("y");
 		int size = traffic.length;
 		
+		System.out.println("traffic in conflict function: ");
+		printTraffic(traffic);
+		
 		//check DDR
 		if(actX + 1 < size && actY + 1 < size) {
 			if(!traffic[actX + 1][actY + 1].equals("null")) {
-				conflicts.add(traffic[actX + 1][actY + 1]);
+				conflicts.put(name, traffic[actX + 1][actY + 1]);
+				conflicts.put(traffic[actX + 1][actY + 1], name);
 				return traffic[actX + 1][actY + 1];
 			}
 		}
+	
 		
 		//check DDL
 		if(actX + 1 < size && actY - 1 >= 0) {
 			if(!traffic[actX + 1][actY - 1].equals("null")) {
-				conflicts.add(traffic[actX + 1][actY - 1]);
+				conflicts.put(name, traffic[actX + 1][actY - 1]);
+				conflicts.put(traffic[actX + 1][actY - 1], name);
 				return traffic[actX + 1][actY - 1];
 			}
 		}
@@ -110,7 +116,8 @@ public class Util
 		//check DUL
 		if(actX - 1 >= 0 && actY - 1 >= 0) {
 			if(!traffic[actX - 1][actY - 1].equals("null")) {
-				conflicts.add(traffic[actX - 1][actY - 1]);
+				conflicts.put(name, traffic[actX - 1][actY - 1]);
+				conflicts.put(traffic[actX - 1][actY - 1], name);
 				return traffic[actX - 1][actY - 1];
 			}
 		}
@@ -118,7 +125,8 @@ public class Util
 		//check DUR
 		if(actX - 1 >= 0 && actY + 1 < size) {
 			if(!traffic[actX - 1][actY + 1].equals("null")) {
-				conflicts.add(traffic[actX - 1][actY + 1]);
+				conflicts.put(name, traffic[actX - 1][actY + 1]);
+				conflicts.put(traffic[actX - 1][actY + 1], name);
 				return traffic[actX - 1][actY + 1];
 			}
 		}
@@ -126,7 +134,8 @@ public class Util
 		//check U
 		if(actX - 1 >= 0) {
 			if(!traffic[actX - 1][actY].equals("null")) {
-				conflicts.add(traffic[actX - 1][actY]);
+				conflicts.put(name, traffic[actX - 1][actY]);
+				conflicts.put(traffic[actX - 1][actY], name);
 				return traffic[actX - 1][actY];
 			}
 		}
@@ -134,7 +143,8 @@ public class Util
 		//check D
 		if(actX + 1 < size) {
 			if(!traffic[actX + 1][actY].equals("null")) {
-				conflicts.add(traffic[actX + 1][actY]);
+				conflicts.put(name, traffic[actX + 1][actY]);
+				conflicts.put(traffic[actX + 1][actY], name);
 				return traffic[actX + 1][actY];
 			}
 		}
@@ -142,7 +152,8 @@ public class Util
 		//check R
 		if(actY + 1 < size) {
 			if(!traffic[actX][actY + 1].equals("null")) {
-				conflicts.add(traffic[actX][actY + 1]);
+				conflicts.put(name, traffic[actX][actY + 1]);
+				conflicts.put(traffic[actX][actY + 1], name);
 				return traffic[actX][actY + 1];
 			}
 		}
@@ -150,7 +161,8 @@ public class Util
 		//check L
 		if(actY - 1 >= 0) {
 			if(!traffic[actX][actY - 1].equals("null")) {
-				conflicts.add(traffic[actX][actY - 1]);
+				conflicts.put(name, traffic[actX][actY - 1]);
+				conflicts.put(traffic[actX][actY - 1], name);
 				return traffic[actX][actY - 1];
 			}
 		}

@@ -14,7 +14,6 @@ import jade.lang.acl.ACLMessage;
 @SuppressWarnings("serial")
 public class PlaneComp extends Agent 
 {     
-	Util util = new Util();
 	int predictedHours;
 	int fuelLeft;
 	int speed;
@@ -69,11 +68,10 @@ public class PlaneComp extends Agent
     {
 		argCreation();
 		
-		Behaviour movement = new TickerBehaviour(this, (util.movementCost/speed)*1000) {
+		Behaviour movement = new TickerBehaviour(this, (Util.movementCost/speed)*1000) {
 			
 			@Override
 			protected void onTick() {
-				System.out.println("New tick for " + name);
 				
 				if(actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
 					System.out.println("I " + name + " arrived at destiny");
@@ -81,20 +79,19 @@ public class PlaneComp extends Agent
 					stop();
 				}
 				
-				System.out.println("negot = " + negot + ", conflict = " + conflictPlane);
+				if(Util.conflicts.containsKey(name))
+					negot = true;
 				
 				if(name.equals("Comp") && !finished) {
 					if (!negot) {
-						if(conflictPlane.equals("none") || !util.conflicts.contains(name)){
-							System.out.println("antes de move de " + name);
-							util.printTraffic(traffic);
-							util.move(route, actualPos);
+						if(conflictPlane.equals("none")){
+							System.out.println("Plane " + name + " ready to move");
+							Util.move(route, actualPos);
 						} else {
 							negot = true;
 						}
-					} else {
-						block();
 					}
+					
 					addBehaviour(new SimpleBehaviour() {
 						
 						@Override
@@ -116,16 +113,17 @@ public class PlaneComp extends Agent
 							ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
 							answer = blockingReceive();
 							String s = answer.getContent();
-							traffic = util.refactorTrafficArray(s);
-					        util.printTraffic(traffic);
-					        
-					        System.out.println();
-							conflictPlane = util.checkConflict(actualPos, traffic);
-							System.out.println("recebou grelha o " + name);
-							util.printTraffic(traffic);
-							if(!conflictPlane.equals("none")){
+							traffic = Util.refactorTrafficArray(s);
+							
+							if(Util.conflicts.containsKey(name)) {
+								conflictPlane = Util.conflicts.get(name);
+							} else
+								conflictPlane = Util.checkConflict(actualPos, traffic, name);
+							
+							if(!conflictPlane.equals("none") || Util.conflicts.containsKey(name)){
 								negot = true;
 								System.out.println("Conflicted detected!! Starting negotiations with " + conflictPlane);
+								
 								addBehaviour(new SimpleBehaviour() {
 									
 									@Override
@@ -146,9 +144,7 @@ public class PlaneComp extends Agent
 							comm = true;
 						}
 					});
-					System.out.println("actions end for " + name);
 				}
-				System.out.println("ticket ends for "+ name);
 			}
 		};
 		

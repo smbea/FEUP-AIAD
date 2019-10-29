@@ -42,7 +42,6 @@ public class ATC extends Agent {
 						if(msg != null) {
 							String content = msg.getContent();		
 							if(content.contains("traffic")) {
-								System.out.println("ATC ready to send");
 								ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
 								
 								String[] splitMsg = content.split(" ");
