@@ -119,13 +119,14 @@ public class PlaneCoop extends Agent
 							
 							if(!conflictPlane.equals("none") || Util.conflicts.containsKey(name)){
 								negot = true;
-								System.out.println("Conflicted detected!! Starting negotiations with " + conflictPlane);
 								System.out.println(Util.conflicts.size());
+								
+								//negotiation behaviour
 								addBehaviour(new SimpleBehaviour() {
 									
 									@Override
 									public boolean done() {
-										return negot;
+										return !negot;
 									}
 									
 									@Override
@@ -134,6 +135,11 @@ public class PlaneCoop extends Agent
 										msg.setContent("negotiation");
 										msg.addReceiver(getAID(conflictPlane));
 										send(msg);
+										
+										ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
+										answer = blockingReceive();
+										String s = answer.getContent();
+										System.out.println(s + " with " + answer.getSender().getLocalName());
 									}
 								});
 								

@@ -77,7 +77,7 @@ public class PlaneComp extends Agent
 					System.out.println("I " + name + " arrived at destiny");
 					finished = true;
 					stop();
-				}
+				} 
 				
 				if(Util.conflicts.containsKey(name))
 					negot = true;
@@ -122,13 +122,12 @@ public class PlaneComp extends Agent
 							
 							if(!conflictPlane.equals("none") || Util.conflicts.containsKey(name)){
 								negot = true;
-								System.out.println("Conflicted detected!! Starting negotiations with " + conflictPlane);
 								
 								addBehaviour(new SimpleBehaviour() {
 									
 									@Override
 									public boolean done() {
-										return negot;
+										return !negot;
 									}
 									
 									@Override
@@ -137,6 +136,12 @@ public class PlaneComp extends Agent
 										msg.setContent("negotiation");
 										msg.addReceiver(getAID(conflictPlane));
 										send(msg);
+										
+										ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
+										answer = blockingReceive();
+										String s = answer.getContent();
+										System.out.println(s + " with " + answer.getSender().getLocalName());
+									
 									}
 								});
 								
@@ -149,5 +154,7 @@ public class PlaneComp extends Agent
 		};
 		
 		addBehaviour(movement);
+		
+		
     }  
 } 
