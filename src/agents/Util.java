@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
 
-@SuppressWarnings("serial")
 public class Util 
 {       
 	static int movementCost = 200;
@@ -90,9 +89,6 @@ public class Util
 		int actX = actualPos.get("x");
 		int actY = actualPos.get("y");
 		int size = traffic.length;
-		
-		System.out.println("traffic in conflict function: ");
-		printTraffic(traffic);
 		
 		//check DDR
 		if(actX + 1 < size && actY + 1 < size) {
