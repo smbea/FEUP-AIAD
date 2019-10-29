@@ -2,6 +2,7 @@ package agents;
 import java.util.HashMap;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.List;
 
 import jade.core.AID;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
@@ -20,6 +21,7 @@ public class PlaneCoop extends Agent
 	int startBid;
 	int inc;
 	int maxBid;
+	int minAcceptBid;
 	String name;
 	boolean finished = false;
 	boolean comm = false;
@@ -34,7 +36,7 @@ public class PlaneCoop extends Agent
 	AMSAgentDescription [] agents = null;
 	AID myID;
 	String goal;								//money, time, fuel, etc
-	String type;                                //competitive, cooperative 
+	String[] preferences = new String[4];
 	
 	protected void argCreation() {
     	actualPos.put("x", 0);
@@ -48,12 +50,17 @@ public class PlaneCoop extends Agent
     	timeLeft = 40;
     	money = 100;
     	goal = "none";
-    	type = "cooperative";
     	name = getLocalName();
+    	
+    	preferences[0] = "fuel";
+    	preferences[1] = "money";
+    	preferences[2] = "time";
+    	preferences[3] = "detour";
     	
     	startBid = 10;
     	inc = 20;
     	maxBid = money;
+    	minAcceptBid = 15;
    	
     	route.add("DDR");
     	route.add("DDR");
@@ -141,6 +148,11 @@ public class PlaneCoop extends Agent
 
 						@Override
 						public void action() {
+							if(Util.initiator.equals("null"))
+								Util.initiator = name;
+							else
+								Util.responder = name;
+							
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("negotiation");
 							msg.addReceiver(getAID(conflictPlane));
@@ -155,7 +167,13 @@ public class PlaneCoop extends Agent
 									String s = answer.getContent();
 									System.out.println(
 											"Plane: " + name + " " + s + " with " + answer.getSender().getLocalName());
-
+									
+									
+									if(Util.initiator.equals(name)) {
+										System.out.println("Plane: " + name + " is initiator");
+									} else if(Util.responder.equals(name)) {
+										System.out.println("Plane: " + name + " is responder");
+									}
 								}
 
 								@Override

@@ -35,7 +35,7 @@ public class PlaneComp extends Agent
 	AMSAgentDescription [] agents = null;
 	AID myID;
 	String goal;								//money, time, fuel, etc
-	String type;                                //competitive, cooperative 
+	String[] preferences = new String[4];
 	
 	protected void argCreation() {
     	actualPos.put("x", 3);
@@ -49,13 +49,17 @@ public class PlaneComp extends Agent
     	timeLeft = 60;
     	money = 100;
     	goal = "money";
-    	type = "competitive";
     	name = getLocalName();
     	
     	startBid = 1;
     	inc = 1;
     	maxBid = 10;
-    	minAcceptBid = 40;
+    	minAcceptBid = 50;
+    	
+    	preferences[0] = "money";
+    	preferences[1] = "fuel";
+    	preferences[2] = "time";
+    	preferences[3] = "detour";
    	
     	route.add("DUL");
     	route.add("DUL");
@@ -142,6 +146,11 @@ public class PlaneComp extends Agent
 
 						@Override
 						public void action() {
+							if(Util.initiator.equals("null"))
+								Util.initiator = name;
+							else
+								Util.responder = name;
+							
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("negotiation");
 							msg.addReceiver(getAID(conflictPlane));
@@ -156,6 +165,13 @@ public class PlaneComp extends Agent
 									String s = answer.getContent();
 									System.out.println(
 											"Plane: " + name + " " + s + " with " + answer.getSender().getLocalName());
+									
+
+									if(Util.initiator.equals(name)) {
+										System.out.println("Plane: " + name + " is initiator");
+									} else if(Util.responder.equals(name)) {
+										System.out.println("Plane: " + name + " is responder");
+									}
 
 								}
 

@@ -10,6 +10,8 @@ public class Util
 	static int movementCost = 200;
 	static int fuelConsumptionByMove = 1;
 	static HashMap<String, String> conflicts = new HashMap<String, String>();
+	static String initiator = "null";
+	static String responder = "null";
 	
 	String genCID(String cidBase, int cidCnt, String name) {
 		if(cidBase == null) {
