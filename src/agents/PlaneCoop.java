@@ -222,27 +222,26 @@ public class PlaneCoop extends Agent
 					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
 					answer = blockingReceive();
 					String s = answer.getContent();
-					//traffic = Util.refactorTrafficArray(s);
-					
-					//Util.checkConflict(actualPos, traffic, name);
-					
-					//if (Util.conflicts.containsKey(name)) {
-						//conflictPlane = Util.conflicts.get(name);
+
 					if (s.contentEquals("Conflict")) {
-						negot = true;
+						//negot = true;
 						System.out.println("CONFLICT DETECTED IN " + name);
+						block();
 					} else {
 						System.out.println("NO CONFLICT IN " + name);
-					}
-					
-					if (!negot) {
-						if(s.equals("Continue")){
-							System.out.println("Plane " + name + " ready to move");
-							Util.move(route, actualPos);
-						} else {
-							negot = true;
+						System.out.println("Plane " + name + " ready to move");
+						Util.move(route, actualPos);
+						
+						
+						try  {
+							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+							msg.setContent("Move " + actualPos.get("x") + " " + actualPos.get("y"));
+							msg.addReceiver(getAID("control"));
+							send(msg);
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-				
+						
 					}
 				}
 			  }

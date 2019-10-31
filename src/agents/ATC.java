@@ -46,27 +46,10 @@ public class ATC extends Agent {
 				if(msg != null) {
 					String content = msg.getContent();
 					System.out.println("msg = " + content);
+					ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+					
+					String[] splitMsg = content.split(" ");
 					if(content.contains("Request_Move")) {
-						ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-						
-						String[] splitMsg = content.split(" ");
-						
-						// update grid
-						/*
-						for (int i = 0; i < traffic.length; i++) {
-							for (int j = 0; j < traffic[i].length; j++) {
-								if(traffic[i][j] != null) {
-									if(traffic[i][j].equals(msg.getSender().getLocalName())) {
-										traffic[i][j] = null;
-									}
-								}
-							}
-						}
-						
-						traffic[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[2])] = msg.getSender().getLocalName();
-						*/
-						//printTraffic();
-						
 						HashMap<String, Integer> planePos = new HashMap<String, Integer>();
 						planePos.put("x", Integer.parseInt(splitMsg[1]));
 						planePos.put("y", Integer.parseInt(splitMsg[2]));
@@ -88,7 +71,22 @@ public class ATC extends Agent {
 						reply.addReceiver(msg.getSender());
 						send(reply);
 						block();
-					} else {
+					} else if(content.contains("Move")) {						
+						for (int i = 0; i < traffic.length; i++) {
+							for (int j = 0; j < traffic[i].length; j++) {
+								if(traffic[i][j] != "null") {
+									if(traffic[i][j].equals(msg.getSender().getLocalName())) {
+										traffic[i][j] = "null";
+									}
+								}
+							}
+						}
+						
+						traffic[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[1])] = msg.getSender().getLocalName();
+						
+						System.out.println("Updated grid!");
+					}
+					else {
 						System.out.println("Not traffic");
 					}
 				}
