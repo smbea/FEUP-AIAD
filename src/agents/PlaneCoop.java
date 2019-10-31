@@ -72,12 +72,7 @@ public class PlaneCoop extends Agent
     	route.add("DDR");
 	}
 	
-	protected void setup() 
-    {
-		argCreation();
-		
-		if(method.equals("descentralized")) {
-		
+	protected void descentralizedBehaviour() {
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
 		
 		Behaviour movement = new TickerBehaviour(this, (Util.movementCost/speed)*1000) {
@@ -199,13 +194,72 @@ public class PlaneCoop extends Agent
 		});
 		
 		addBehaviour(parallel);
+	}
+	
+	protected void centralizedBehaviour() {
 		
-		}
-		
-		else if(method.equals("centralized")) {
-			//CODAR BEHAVIOURS CENTRALIZED. MOVE igual ao de cima. Modificar segundo behaviour
-			
-		}
+		Behaviour movement = new TickerBehaviour(this, (Util.movementCost/speed)*1000) {
+				
+			@Override
+			protected void onTick() {
+				
+				if(actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
+					System.out.println("I " + name + " arrived at destiny");
+					finished = true;
+					stop();
+				}
+				
+				if(!finished) {
+					try {
+						ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+						msg.setContent("Request_Move " + actualPos.get("x") + " " + actualPos.get("y"));
+						msg.addReceiver(getAID("control"));
+						send(msg);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 
+					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
+					answer = blockingReceive();
+					String s = answer.getContent();
+					//traffic = Util.refactorTrafficArray(s);
+					
+					//Util.checkConflict(actualPos, traffic, name);
+					
+					//if (Util.conflicts.containsKey(name)) {
+						//conflictPlane = Util.conflicts.get(name);
+					if (s.contentEquals("Conflict")) {
+						negot = true;
+						System.out.println("CONFLICT DETECTED IN " + name);
+					} else {
+						System.out.println("NO CONFLICT IN " + name);
+					}
+					
+					if (!negot) {
+						if(s.equals("Continue")){
+							System.out.println("Plane " + name + " ready to move");
+							Util.move(route, actualPos);
+						} else {
+							negot = true;
+						}
+				
+					}
+				}
+			  }
+			};
+			
+			addBehaviour(movement);
+	}
+	
+	protected void setup() 
+    {
+		argCreation();
+		
+		if(method.equals("descentralized")) {
+			descentralizedBehaviour();
+		} else if(method.equals("centralized")) {
+			//CODAR BEHAVIOURS CENTRALIZED. MOVE igual ao de cima. Modificar segundo behaviour
+			centralizedBehaviour();
+		}
     }  
 } 

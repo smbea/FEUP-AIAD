@@ -92,8 +92,13 @@ public class Util
 		int actY = actualPos.get("y");
 		int size = traffic.length;
 		
+		System.out.println("check " + actX + " " + actY + " , size = " + size);
+		
+		printTraffic(traffic);
+		
 		//check DDR
 		if(actX + 1 < size && actY + 1 < size) {
+			System.out.println("xy " + traffic[actX+1][actY+1]);
 			if(!traffic[actX + 1][actY + 1].equals("null")) {
 				conflicts.put(name, traffic[actX + 1][actY + 1]);
 				conflicts.put(traffic[actX + 1][actY + 1], name);
