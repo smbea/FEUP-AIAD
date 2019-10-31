@@ -10,13 +10,15 @@ import jade.lang.acl.ACLMessage;
 public class ATC extends Agent {
 	String[][] traffic = new String[5][5];
 	boolean comm = false;
+	String method;
 	
 	protected void createTraffic() {
 		Object[] args = getArguments();
      	String s = (String) args[0];
      	String[] splitInfo = s.split(" ");
+     	method = splitInfo[splitInfo.length - 1];
      	
-     	for (int i = 0; i < splitInfo.length; i=i+3) {
+     	for (int i = 0; i < splitInfo.length - 1; i=i+3) {
 			traffic[Integer.parseInt(splitInfo[i+1])][Integer.parseInt(splitInfo[i+2])] = (String) splitInfo[i];
 		}
 	}
@@ -34,6 +36,7 @@ public class ATC extends Agent {
     {	
 		createTraffic();
 		
+		if(method.equals("descentralized")){
         addBehaviour(new CyclicBehaviour() {
 
 					@Override
@@ -72,6 +75,10 @@ public class ATC extends Agent {
 
 					
         		});
-    	}  
-	
+    	} else if (method.equals("centralized")){
+    		//CODAR ATC PARA centralized. Semelhante ao de cima mas em vez de devolver
+    		//checka conflito e começa negocição como initiator pedindo aos avios em
+    		//conflito (responders) propopsals escolhendo depois a melhor
+    	}
+    }
 }

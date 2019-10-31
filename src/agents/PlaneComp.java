@@ -27,6 +27,7 @@ public class PlaneComp extends Agent
 	boolean negot = false;
 	String conflictPlane = "none";
 	String cidBase;
+	String method;
 	protected static int cidCnt = 0;
 	Queue<String> route = new LinkedList<>();
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
@@ -38,6 +39,9 @@ public class PlaneComp extends Agent
 	String[] preferences = new String[4];
 	
 	protected void argCreation() {
+		Object[] args = getArguments();
+		method = (String) args[0];
+		
     	actualPos.put("x", 3);
     	actualPos.put("y", 3);
     	
@@ -69,6 +73,8 @@ public class PlaneComp extends Agent
 	protected void setup() 
     {
 		argCreation();
+		
+		if(method.equals("descentralized")) {
 		
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
 		
@@ -192,6 +198,13 @@ public class PlaneComp extends Agent
 		});
 		
 		addBehaviour(parallel);
+		
+    }
+	
+	else if(method.equals("centralized")) {
+		//CODAR BEHAVIOURS CENTRALIZED. MOVE igual ao de cima. Modificar segundo behaviour
+		
+	}
 
     }  
 } 
