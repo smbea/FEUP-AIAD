@@ -20,8 +20,9 @@ public class Util
 		return cidBase + (cidCnt++);
 	}
 	 
-	static void move(Queue<String> route, HashMap<String, Integer> actualPos) {
+	static void move(Queue<String> route, HashMap<String, Integer> actualPos, int distanceLeft) {
 		String nextMove = route.remove();
+		distanceLeft--;
 		switch (nextMove) {
 		case "DDR":
 			actualPos.replace("x", actualPos.get("x") + 1);

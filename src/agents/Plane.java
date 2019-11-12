@@ -15,11 +15,26 @@ import jade.lang.acl.MessageTemplate;
 @SuppressWarnings("serial")
 public class Plane extends Agent 
 {     
-	int predictedHours;
+	/**
+	 * Fuel Left (liters)
+	 */
 	int fuelLeft;
+	/**
+	 * Plane average total fuel loss of 10 L/km (liters per kilometer)
+	 */
+	int fuelLoss;
+	/**
+	 * Predicted Flight Time Left (minutes)
+	 */
+	int timeLeft;
+	/**
+	 * Plane average speed of 100 km/h (kilometers per hour)
+	 */
 	int speed;
-	float timeLeft;
-	int money;
+	/**
+	 * Current Distance Left (km)
+	 */
+	int distanceLeft;
 	int startBid;
 	int inc;
 	int maxBid;
@@ -38,9 +53,8 @@ public class Plane extends Agent
 	String[][] traffic = new String[5][5];
 	AMSAgentDescription [] agents = null;
 	AID myID;
-	String goal;								//money, time, fuel, etc
 	HashMap<String, Double> negotAttrWeight;
-	HashMap<String, Integer> negotiationAttr;
+	HashMap<String, HashMap<String, Integer>> negotiationAttrLevels;
 	
 	/**
 	 * Initialize Plane's Attributes.
@@ -55,34 +69,56 @@ public class Plane extends Agent
 			actualPos = plane.actualPos;
 			finalPos = plane.finalPos;
 			fuelLeft = plane.fuelLeft;
-			speed = plane.speed;
+			fuelLoss = plane.fuelLoss;
 			timeLeft = plane.timeLeft;
-			money = plane.money;
-			goal = plane.goal;
 			startBid = plane.startBid;
 			inc = plane.inc;
 			maxBid = plane.maxBid;
 			minAcceptBid = plane.minAcceptBid;
-			negotiationAttr = plane.negotiationAttr;
+			negotiationAttrLevels = plane.negotiationAttrLevels;
 			negotAttrWeight = plane.negotAttrWeight;
 			route = plane.route;
+			distanceLeft = plane.distanceLeft;
+			speed = plane.speed;
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
 			actualPos = plane.actualPos;
 			finalPos = plane.finalPos;
 			fuelLeft = plane.fuelLeft;
-			speed = plane.speed;
+			fuelLoss = plane.fuelLoss;
 			timeLeft = plane.timeLeft;
-			money = plane.money;
-			goal = plane.goal;
 			startBid = plane.startBid;
 			inc = plane.inc;
 			maxBid = plane.maxBid;
 			minAcceptBid = plane.minAcceptBid;
-			negotiationAttr = plane.negotiationAttr;
+			negotiationAttrLevels = plane.negotiationAttrLevels;
 			negotAttrWeight = plane.negotAttrWeight;
 			route = plane.route;
+			distanceLeft = plane.distanceLeft;
+			speed = plane.speed;
 		}
+	}
+	
+	/**
+	 * Update dynamic numerical values of negotiation attributes.
+	 */
+	void updateNegotiationAttrLevels() {
+		negotiationAttrLevels.remove("fuel");
+		negotiationAttrLevels.remove("time");
+		negotiationAttrLevels.remove("detour");
+		
+		negotiationAttrLevels.put("fuel", new HashMap<String, Integer>() {{
+			put("min", 4000);
+			put("max", distanceLeft*fuelLoss);
+		}});
+		negotiationAttrLevels.put("time", new HashMap<String, Integer>() {{
+			put("min", timeLeft/60);
+			put("max", (fuelLeft/fuelLoss)/speed);
+		}});
+		negotiationAttrLevels.put("detour", new HashMap<String, Integer>() {{
+			put("min", 0);
+			put("max", fuelLeft/fuelLoss);
+		}});
 	}
 
 	/**
@@ -91,14 +127,15 @@ public class Plane extends Agent
 	int utilityFunction() {
 		int sumWeight = 0, sumUtil = 0;
 		
-		if (negotiationAttr.size() != negotAttrWeight.size()) {
+		if (negotiationAttrLevels.size() != negotAttrWeight.size()) {
 			System.out.println("Error: number of negotiation set attributes' importance scores "
 					+ "do not match with given weights.");
 			return -1;
 		}
 		
 		for (Entry<String, Double> weight : negotAttrWeight.entrySet()) {
-			sumUtil += negotiationAttr.get(weight.getKey()) * weight.getValue();
+			sumUtil += negotiationAttrLevels.get(weight.getKey()).get("min") * weight.getValue();
+			sumUtil += negotiationAttrLevels.get(weight.getKey()).get("max") * weight.getValue();
 			sumWeight += weight.getValue();
 		}
 		
@@ -108,6 +145,10 @@ public class Plane extends Agent
 		}
 		
 		return sumUtil;
+	}
+	
+	void makeDeals() {
+		
 	}
 	/**
 	 * Implements Descentralized Air Traffic, i.e., planes communicate and negotiate with each other.
@@ -151,7 +192,7 @@ public class Plane extends Agent
 					if (!negot) {
 						if(conflictPlane.equals("none")){
 							System.out.println("Plane " + name + " ready to move");
-							Util.move(route, actualPos);
+							Util.move(route, actualPos, distanceLeft);
 						} else {
 							negot = true;
 						}
@@ -274,7 +315,7 @@ public class Plane extends Agent
 					} else {
 						System.out.println("NO CONFLICT IN " + name);
 						System.out.println("Plane " + name + " ready to move");
-						Util.move(route, actualPos);
+						Util.move(route, actualPos, distanceLeft);
 						try  {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Move " + actualPos.get("x") + " " + actualPos.get("y"));
