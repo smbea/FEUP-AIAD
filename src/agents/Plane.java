@@ -4,10 +4,12 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 import jade.core.AID;
+import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 @SuppressWarnings("serial")
 public class Plane extends Agent 
@@ -38,6 +40,9 @@ public class Plane extends Agent
 	String goal;								//money, time, fuel, etc
 	String[] preferences = new String[4];
 	
+	/**
+	 * Initialize Plane's Attributes.
+	 */
 	protected void argCreation() {
 		Object[] args = getArguments();
 		name=getLocalName();
@@ -75,7 +80,10 @@ public class Plane extends Agent
 			route = plane.route;
 		}
 	}
-	
+
+	/**
+	 * Implements Descentralized Air Traffic, i.e., planes communicate and negotiate with each other.
+	 */
 	protected void descentralizedBehaviour() {
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
 		
@@ -200,7 +208,9 @@ public class Plane extends Agent
 		addBehaviour(parallel);
 	}
 	
-	
+	/**
+	 * Implements Centralized Air Traffic, i.e., planes communicate and negotiate with ATC.
+	 */
 	protected void centralizedBehaviour() {
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
 		
@@ -237,7 +247,6 @@ public class Plane extends Agent
 						System.out.println("NO CONFLICT IN " + name);
 						System.out.println("Plane " + name + " ready to move");
 						Util.move(route, actualPos);
-						
 						try  {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Move " + actualPos.get("x") + " " + actualPos.get("y"));
@@ -261,15 +270,23 @@ public class Plane extends Agent
 					ACLMessage msg = receive();
 					if(msg != null) {
 						String content = msg.getContent();		
-						if(content.contains("get-preferences")) {
+						if(content.contains("Get_Proposals")) {
 							
-							System.out.println("GET PREFERENCES RECEIVE BY " + name);
+							System.out.println("Get Proposals Received By " + name);
 							/*ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
 							reply.setContent(trafficS);
 							reply.addReceiver(msg.getSender());
 							send(reply);
 							block();
 					*/
+							MessageTemplate template = MessageTemplate.and(
+							  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
+							  		MessageTemplate.MatchPerformative(ACLMessage.CFP) );
+							
+							ContractNetResponderAgent responder = new ContractNetResponderAgent(this.getAgent(), template);
+							
+							//responder.prepareResponse(cfp);
+							//responder.sendMessage();
 						}
 				};
 				}

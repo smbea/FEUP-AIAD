@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 
 @SuppressWarnings("serial")
@@ -86,13 +87,15 @@ public class ATC extends Agent {
 						
 						System.out.println("Updated grid!");
 						
-						String cfpContent = "get-preferences";
+						String cfpContent = "Get_Proposals";
 						
 						ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+						cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
 						cfp.setContent(cfpContent);
 						cfp.addReceiver(msg.getSender());
 						
 						ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
+						
 						initiator.prepareCfps(cfp);
 						initiator.sendMessage();
 					}

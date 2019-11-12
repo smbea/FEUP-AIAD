@@ -13,6 +13,8 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator{
 
 	public ContractNetInitiatorAgent(Agent a, ACLMessage cfp) {
 		super(a, cfp);
+		this.agent = a;
+		this.cfp = cfp;
 	}
 	
 	@Override
@@ -34,6 +36,11 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator{
 	}
 	
 	@Override
+	protected void handleInform(ACLMessage inform) {
+		super.handleInform(inform);
+	}
+	
+	@Override
 	protected void handleAllResponses(Vector responses, Vector acceptances) {
 		// TODO Auto-generated method stub
 		super.handleAllResponses(responses, acceptances);
@@ -51,6 +58,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator{
 	}
 	
 	protected void sendMessage() {
+		System.out.println("agent = " + this.agent.getName()); 
 		this.agent.send(cfp);
 	}
 }
