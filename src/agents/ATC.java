@@ -85,6 +85,16 @@ public class ATC extends Agent {
 						traffic[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[1])] = msg.getSender().getLocalName();
 						
 						System.out.println("Updated grid!");
+						
+						String cfpContent = "get-preferences";
+						
+						ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+						cfp.setContent(cfpContent);
+						cfp.addReceiver(msg.getSender());
+						
+						ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
+						initiator.prepareCfps(cfp);
+						initiator.sendMessage();
 					}
 					else {
 						System.out.println("Not traffic");

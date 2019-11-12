@@ -7,13 +7,12 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
 
 @SuppressWarnings("serial")
-public class PlaneInitiator extends ContractNetInitiator{
-	Agent planeInitiator;
-	ACLMessage cfp;
+public class ContractNetInitiatorAgent extends ContractNetInitiator{
+	private Agent agent;
+	private ACLMessage cfp;
 
-	public PlaneInitiator(Agent a, ACLMessage cfp) {
+	public ContractNetInitiatorAgent(Agent a, ACLMessage cfp) {
 		super(a, cfp);
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override
@@ -49,5 +48,9 @@ public class PlaneInitiator extends ContractNetInitiator{
 	protected void handleRefuse(ACLMessage refuse) {
 		// TODO Auto-generated method stub
 		super.handleRefuse(refuse);
+	}
+	
+	protected void sendMessage() {
+		this.agent.send(cfp);
 	}
 }
