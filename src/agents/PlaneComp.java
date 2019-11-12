@@ -26,7 +26,25 @@ public class PlaneComp
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 3);put("y", 3);}};
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	String goal="money";								//money, time, fuel, etc
-	String[] preferences = {"money", "fuel", "time", "detour"};
+	/**
+	 * Importance score of each attribute such that all attribute weights add up to one. A higher score is generally related to more importance.
+	 */
+	HashMap<String, Double> negotAttrWeight = new HashMap<String, Double>() {{
+		put("money", 0.5);
+		put("fuel", 0.25);
+		put("time", 0.15);
+		put("detour", 0.1);
+	}};
+	
+	/**
+	 * Numerical value that is attached to a particular attribute. A higher value is generally related to more attractiveness.
+	 */
+	HashMap<String, Integer> negotiationAttr = new HashMap<String, Integer>() {{
+		put("money", 5);
+		put("fuel", 1);
+		put("time", 1);
+		put("detour", 1);
+	}};
 	
 	public PlaneComp() {}
 } 

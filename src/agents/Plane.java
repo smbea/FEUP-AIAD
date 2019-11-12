@@ -2,6 +2,7 @@ package agents;
 import java.util.HashMap;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 import jade.core.AID;
 import jade.domain.FIPANames;
@@ -38,7 +39,8 @@ public class Plane extends Agent
 	AMSAgentDescription [] agents = null;
 	AID myID;
 	String goal;								//money, time, fuel, etc
-	String[] preferences = new String[4];
+	HashMap<String, Double> negotAttrWeight;
+	HashMap<String, Integer> negotiationAttr;
 	
 	/**
 	 * Initialize Plane's Attributes.
@@ -61,7 +63,8 @@ public class Plane extends Agent
 			inc = plane.inc;
 			maxBid = plane.maxBid;
 			minAcceptBid = plane.minAcceptBid;
-			preferences = plane.preferences;
+			negotiationAttr = plane.negotiationAttr;
+			negotAttrWeight = plane.negotAttrWeight;
 			route = plane.route;
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
@@ -76,11 +79,36 @@ public class Plane extends Agent
 			inc = plane.inc;
 			maxBid = plane.maxBid;
 			minAcceptBid = plane.minAcceptBid;
-			preferences = plane.preferences;
+			negotiationAttr = plane.negotiationAttr;
+			negotAttrWeight = plane.negotAttrWeight;
 			route = plane.route;
 		}
 	}
 
+	/**
+	 * Multi-attribute utility function to evalute negotiation attributes.
+	 */
+	int utilityFunction() {
+		int sumWeight = 0, sumUtil = 0;
+		
+		if (negotiationAttr.size() != negotAttrWeight.size()) {
+			System.out.println("Error: number of negotiation set attributes' importance scores "
+					+ "do not match with given weights.");
+			return -1;
+		}
+		
+		for (Entry<String, Double> weight : negotAttrWeight.entrySet()) {
+			sumUtil += negotiationAttr.get(weight.getKey()) * weight.getValue();
+			sumWeight += weight.getValue();
+		}
+		
+		if (sumWeight != 1) {
+			System.out.println("Error: negotiation set attributes' weight does not sum up to one.");
+			return -1;
+		}
+		
+		return sumUtil;
+	}
 	/**
 	 * Implements Descentralized Air Traffic, i.e., planes communicate and negotiate with each other.
 	 */
