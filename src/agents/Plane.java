@@ -1,4 +1,5 @@
 package agents;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Queue;
 import java.util.LinkedList;
@@ -35,10 +36,8 @@ public class Plane extends Agent
 	 * Current Distance Left (km)
 	 */
 	int distanceLeft;
-	int startBid;
-	int inc;
-	int maxBid;
-	int minAcceptBid;
+	int bid;
+	int moneyAvailable;
 	String name;
 	boolean finished = false;
 	boolean comm = false;
@@ -71,15 +70,13 @@ public class Plane extends Agent
 			fuelLeft = plane.fuelLeft;
 			fuelLoss = plane.fuelLoss;
 			timeLeft = plane.timeLeft;
-			startBid = plane.startBid;
-			inc = plane.inc;
-			maxBid = plane.maxBid;
-			minAcceptBid = plane.minAcceptBid;
+			bid = plane.bid;
 			negotiationAttrLevels = plane.negotiationAttrLevels;
 			negotAttrWeight = plane.negotAttrWeight;
 			route = plane.route;
 			distanceLeft = plane.distanceLeft;
 			speed = plane.speed;
+			moneyAvailable = plane.moneyAvailable;
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
 			actualPos = plane.actualPos;
@@ -87,15 +84,13 @@ public class Plane extends Agent
 			fuelLeft = plane.fuelLeft;
 			fuelLoss = plane.fuelLoss;
 			timeLeft = plane.timeLeft;
-			startBid = plane.startBid;
-			inc = plane.inc;
-			maxBid = plane.maxBid;
-			minAcceptBid = plane.minAcceptBid;
+			bid = plane.bid;
 			negotiationAttrLevels = plane.negotiationAttrLevels;
 			negotAttrWeight = plane.negotAttrWeight;
 			route = plane.route;
 			distanceLeft = plane.distanceLeft;
 			speed = plane.speed;
+			moneyAvailable = plane.moneyAvailable;
 		}
 	}
 	
@@ -124,8 +119,9 @@ public class Plane extends Agent
 	/**
 	 * Multi-attribute utility function to evalute negotiation attributes.
 	 */
-	int utilityFunction() {
-		int sumWeight = 0, sumUtil = 0;
+	protected int utilityFunction() {
+		float sumWeight = 0;
+		int sumUtil = 0;
 		
 		if (negotiationAttrLevels.size() != negotAttrWeight.size()) {
 			System.out.println("Error: number of negotiation set attributes' importance scores "
@@ -147,9 +143,76 @@ public class Plane extends Agent
 		return sumUtil;
 	}
 	
-	void makeDeals() {
+	protected int calcDealCost(HashMap<String, Integer> negotiationAttr) {
+		int sumCost = 0;
 		
+		for (Entry<String, Double> weight : negotAttrWeight.entrySet()) {
+			sumCost += negotiationAttr.get(weight.getKey()) * weight.getValue();
+			sumCost += negotiationAttr.get(weight.getKey()) * weight.getValue();
+		}
+		
+		return sumCost;
 	}
+	
+
+	void evaluateActions(ArrayList<String> proposals) {
+		int tempMoney = moneyAvailable;
+		int utility = utilityFunction();
+		int cost = utility;
+		int maxUtil = 0;
+		String chosenProposal = null;
+		
+		for (String proposal: proposals) {
+			cost = utility;
+			int index;
+			int paidMoney;
+			if ((index = proposal.indexOf("Propose_Payment")) != -1) {
+				paidMoney = Integer.parseInt(proposal.substring(index + 16));
+				tempMoney -= paidMoney;
+			}
+			
+			HashMap<String, Integer> result = new HashMap<String, Integer>();
+			result.put("fuel", fuelLeft-fuelLoss);
+			result.put("money", tempMoney);
+			result.put("time", timeLeft - 1/speed);
+			result.put("detour", distanceLeft + 1);
+			
+			cost -= calcDealCost(result);
+			
+			if (cost > maxUtil) {
+				maxUtil = cost;
+				chosenProposal = proposal;
+			}
+		}
+		
+		System.out.println("proposal = " + chosenProposal + ", cost final = " + cost + ", utility = " + utility);
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	ArrayList<String> getActions() {
+		ArrayList<String> proposals = new ArrayList<String>();
+		String proposal;
+		ArrayList<String> possibleMoves = new ArrayList<String>() {{add("U");add("D");
+		add("R");add("L");add("DDR");add("DDL");add("DUR");add("DUL");}};
+
+		for (int i = 0; i < possibleMoves.size(); i++) {
+			proposal = "Propose_Move " + possibleMoves.get(i);
+			if (possibleMoves.get(i).equals(route.element())) {
+				proposal += ", Propose_Payment " + bid;
+			}
+			proposals.add(proposal);
+		}
+		
+		for (int i = 0; i < proposals.size(); i++) {
+			System.out.println(proposals.get(i));
+		}
+		
+		return proposals;
+	}
+	
 	/**
 	 * Implements Descentralized Air Traffic, i.e., planes communicate and negotiate with each other.
 	 */
@@ -354,6 +417,7 @@ public class Plane extends Agent
 							
 							ContractNetResponderAgent responder = new ContractNetResponderAgent(this.getAgent(), template);
 							
+							evaluateActions(getActions());
 							//responder.prepareResponse(cfp);
 							//responder.sendMessage();
 						}

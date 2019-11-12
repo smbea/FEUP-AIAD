@@ -26,10 +26,9 @@ public class PlaneCoop
 	 * Predicted Flight Time Left (minutes)
 	 */
 	int timeLeft = 40;
-	int startBid=10;
-	int inc=20;
-	int maxBid=100;
+	int bid=10;
 	int minAcceptBid=15;
+	int moneyAvailable = 20;
 	Queue<String> route = new LinkedList<>(){{add("DDR");add("DDR");add("DDR");add("DDR");}};
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 4);put("y", 4);}};
