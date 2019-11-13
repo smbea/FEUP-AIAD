@@ -7,6 +7,8 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
+import protocols.ContractNetInitiatorAgent;
+import utils.Util;
 
 @SuppressWarnings("serial")
 public class ATC extends Agent {
@@ -94,10 +96,10 @@ public class ATC extends Agent {
 						cfp.setContent(cfpContent);
 						cfp.addReceiver(msg.getSender());
 						
-						ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
+						//ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
 						
-						initiator.prepareCfps(cfp);
-						initiator.sendMessage();
+						//initiator.prepareCfps(cfp);
+						//initiator.sendMessage();
 					}
 					else {
 						System.out.println("Not traffic");

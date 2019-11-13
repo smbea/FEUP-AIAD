@@ -13,6 +13,10 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import protocols.ContractNetResponderAgent;
+import utils.PlaneComp;
+import utils.PlaneCoop;
+import utils.Util;
 
 @SuppressWarnings("serial")
 public class Plane extends Agent 
@@ -65,30 +69,30 @@ public class Plane extends Agent
 	
 		if (name.equals("Coop")) {
 			PlaneCoop plane = new PlaneCoop();
-			actualPos = plane.actualPos;
-			finalPos = plane.finalPos;
-			fuelLeft = plane.fuelLeft;
-			fuelLoss = plane.fuelLoss;
-			timeLeft = plane.timeLeft;
-			bid = plane.bid;
-			negotiationAttributes = plane.negotiationAttributes;
-			route = plane.route;
-			distanceLeft = plane.distanceLeft;
-			speed = plane.speed;
-			moneyAvailable = plane.moneyAvailable;
+			actualPos = plane.getActualPos();
+			finalPos = plane.getFinalPos();
+			fuelLeft = plane.getFuelLeft();
+			fuelLoss = plane.getFuelLoss();
+			timeLeft = plane.getTimeLeft();
+			bid = plane.getBid();
+			negotiationAttributes = plane.getNegotiationAttributes();
+			route = plane.getRoute();
+			distanceLeft = plane.getDistanceLeft();
+			speed = plane.getSpeed();
+			moneyAvailable = plane.getMoneyAvailable();
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
-			actualPos = plane.actualPos;
-			finalPos = plane.finalPos;
-			fuelLeft = plane.fuelLeft;
-			fuelLoss = plane.fuelLoss;
-			timeLeft = plane.timeLeft;
-			bid = plane.bid;
-			negotiationAttributes = plane.negotiationAttributes;
-			route = plane.route;
-			distanceLeft = plane.distanceLeft;
-			speed = plane.speed;
-			moneyAvailable = plane.moneyAvailable;
+			actualPos = plane.getActualPos();
+			finalPos = plane.getFinalPos();
+			fuelLeft = plane.getFuelLeft();
+			fuelLoss = plane.getFuelLoss();
+			timeLeft = plane.getTimeLeft();
+			bid = plane.getBid();
+			negotiationAttributes = plane.getNegotiationAttributes();
+			route = plane.getRoute();
+			distanceLeft = plane.getDistanceLeft();
+			speed = plane.getSpeed();
+			moneyAvailable = plane.getMoneyAvailable();
 		}
 	}
 	
@@ -246,7 +250,7 @@ public class Plane extends Agent
 	protected void descentralizedBehaviour() {
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
 		
-		Behaviour movement = new TickerBehaviour(this, (Util.movementCost/speed)*1000) {
+		Behaviour movement = new TickerBehaviour(this, (Util.getMovementCost()/speed)*1000) {
 				
 			@Override
 			protected void onTick() {
@@ -274,8 +278,8 @@ public class Plane extends Agent
 					
 					Util.checkConflict(actualPos, traffic, name);
 					
-					if (Util.conflicts.containsKey(name)) {
-						conflictPlane = Util.conflicts.get(name);
+					if (Util.getConflicts().containsKey(name)) {
+						conflictPlane = Util.getConflicts().get(name);
 						negot = true;
 					}
 					
@@ -304,11 +308,11 @@ public class Plane extends Agent
 			@Override
 			public void action() {
 
-				if (Util.conflicts.containsKey(name))
-					conflictPlane = Util.conflicts.get(name);
+				if (Util.getConflicts().containsKey(name))
+					conflictPlane = Util.getConflicts().get(name);
 				
 
-				if (!conflictPlane.equals("none") || Util.conflicts.containsKey(name)) {
+				if (!conflictPlane.equals("none") || Util.getConflicts().containsKey(name)) {
 					negot = true;
 
 					addBehaviour(new SimpleBehaviour() {
@@ -320,10 +324,10 @@ public class Plane extends Agent
 
 						@Override
 						public void action() {
-							if(Util.initiator.equals("null"))
-								Util.initiator = name;
+							if(Util.getInitiator().equals("null"))
+								Util.setInitiator(name);
 							else
-								Util.responder = name;
+								Util.setResponder(name);
 							
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("negotiation");
@@ -341,9 +345,9 @@ public class Plane extends Agent
 											"Plane: " + name + " " + s + " with " + answer.getSender().getLocalName());
 									
 									
-									if(Util.initiator.equals(name)) {
+									if(Util.getInitiator().equals(name)) {
 										System.out.println("Plane: " + name + " is initiator");
-									} else if(Util.responder.equals(name)) {
+									} else if(Util.getResponder().equals(name)) {
 										System.out.println("Plane: " + name + " is responder");
 									}
 								}
@@ -373,7 +377,7 @@ public class Plane extends Agent
 	protected void centralizedBehaviour() {
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
 		
-		Behaviour movement = new TickerBehaviour(this, (Util.movementCost/speed)*1000) {
+		Behaviour movement = new TickerBehaviour(this, (Util.getMovementCost()/speed)*1000) {
 				
 			@Override
 			protected void onTick() {
@@ -442,9 +446,9 @@ public class Plane extends Agent
 							  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
 							  		MessageTemplate.MatchPerformative(ACLMessage.CFP) );
 							
-							ContractNetResponderAgent responder = new ContractNetResponderAgent(this.getAgent(), template);
+							//ContractNetResponderAgent responder = new ContractNetResponderAgent(this.getAgent(), template);
 							
-							evaluateActions(getActions());
+							//evaluateActions(getActions());
 							//responder.prepareResponse(cfp);
 							//responder.sendMessage();
 						}
