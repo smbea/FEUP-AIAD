@@ -38,35 +38,38 @@ public class PlaneComp
 	 */
 	int distanceLeft = route.size();
 	String goal="money";								//money, time, fuel, etc
-	/**
-	 * Importance score of each attribute such that all attribute weights add up to one. A higher score is generally related to more importance.
-	 */
-	HashMap<String, Double> negotAttrWeight = new HashMap<String, Double>() {{
-		put("money", 0.5);
-		put("fuel", 0.25);
-		put("time", 0.15);
-		put("detour", 0.1);
-	}};
 	
 	/**
 	 * Numerical value that is attached to a particular attribute's level. A higher value is generally related to more attractiveness.
 	 */
-	HashMap<String, HashMap<String, Integer>> negotiationAttrLevels = new HashMap<String, HashMap<String, Integer>>() {{
-		put("money", new HashMap<String, Integer>() {{
-			put("min", 0);
-			put("max", 100);
+	HashMap<String, HashMap<Double, Double>> negotiationAttributes = new HashMap<String, HashMap<Double, Double>>() {{
+		// minimize amount of money spent
+		put("money", new HashMap<Double, Double>() {{
+			put(50.0, 0.045); // nadir alternative value
+			put(49.0, 0.08);  // upper limit for barely acceptable
+			put(1.0, 0.25);   // lower limit of ideal values
+			put(0.0, 0.5);    // ideal alternative value
 		}});
-		put("fuel", new HashMap<String, Integer>() {{
-			put("min", 4000);
-			put("max", distanceLeft*fuelLoss);
+		// maximize amount of fuel
+		put("fuel", new HashMap<Double, Double>() {{
+			put(4000.0, 0.5);          // ideal alternative value
+			put(4000.0-fuelLoss, 0.25);     // lower limit of ideal values
+			put(4000.0-distanceLeft*fuelLoss/2, 0.08); // upper limit for barely acceptable value
+			put(4000.0-distanceLeft*fuelLoss, 0.045); // lowest acceptable value
 		}});
-		put("time", new HashMap<String, Integer>() {{
-			put("min", timeLeft/60);
-			put("max", (fuelLeft/fuelLoss)/speed);
+		// minimize amount of flight time
+		put("time", new HashMap<Double, Double>() {{
+			put(timeLeft/60.0, 0.045);
+			put(timeLeft/60/2.0, 0.08);
+			put(((fuelLeft/fuelLoss)/speed)/2.0, 0.25);
+			put(1.0*(fuelLeft/fuelLoss)/speed, 0.5);
 		}});
-		put("detour", new HashMap<String, Integer>() {{
-			put("min", 0);
-			put("max", fuelLeft/fuelLoss);
+		// minimize detour
+		put("detour", new HashMap<Double, Double>() {{
+			put(1.0*fuelLeft/fuelLoss, 0.045);
+			put(fuelLeft/fuelLoss/2.0, 0.08);
+			put(1.0, 0.25);
+			put(0.0, 0.5);
 		}});
 	}};
 	

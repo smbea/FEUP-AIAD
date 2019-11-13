@@ -52,8 +52,7 @@ public class Plane extends Agent
 	String[][] traffic = new String[5][5];
 	AMSAgentDescription [] agents = null;
 	AID myID;
-	HashMap<String, Double> negotAttrWeight;
-	HashMap<String, HashMap<String, Integer>> negotiationAttrLevels;
+	HashMap<String, HashMap<Double, Double>> negotiationAttributes;
 	
 	/**
 	 * Initialize Plane's Attributes.
@@ -71,8 +70,7 @@ public class Plane extends Agent
 			fuelLoss = plane.fuelLoss;
 			timeLeft = plane.timeLeft;
 			bid = plane.bid;
-			negotiationAttrLevels = plane.negotiationAttrLevels;
-			negotAttrWeight = plane.negotAttrWeight;
+			negotiationAttributes = plane.negotiationAttributes;
 			route = plane.route;
 			distanceLeft = plane.distanceLeft;
 			speed = plane.speed;
@@ -85,8 +83,7 @@ public class Plane extends Agent
 			fuelLoss = plane.fuelLoss;
 			timeLeft = plane.timeLeft;
 			bid = plane.bid;
-			negotiationAttrLevels = plane.negotiationAttrLevels;
-			negotAttrWeight = plane.negotAttrWeight;
+			negotiationAttributes = plane.negotiationAttributes;
 			route = plane.route;
 			distanceLeft = plane.distanceLeft;
 			speed = plane.speed;
@@ -98,41 +95,52 @@ public class Plane extends Agent
 	 * Update dynamic numerical values of negotiation attributes.
 	 */
 	void updateNegotiationAttrLevels() {
-		negotiationAttrLevels.remove("fuel");
-		negotiationAttrLevels.remove("time");
-		negotiationAttrLevels.remove("detour");
+		negotiationAttributes.remove("fuel");
+		negotiationAttributes.remove("time");
+		negotiationAttributes.remove("detour");
 		
-		negotiationAttrLevels.put("fuel", new HashMap<String, Integer>() {{
-			put("min", 4000);
-			put("max", distanceLeft*fuelLoss);
+		// maximize amount of fuel
+		negotiationAttributes.put("fuel", new HashMap<Double, Double>() {{
+			put(4000.0, 0.5);          // ideal alternative value
+			put(4000.0-fuelLoss, 0.25);     // lower limit of ideal values
+			put(4000.0-distanceLeft*fuelLoss/2, 0.08); // upper limit for barely acceptable value
+			put(4000.0-distanceLeft*fuelLoss, 0.045); // lowest acceptable value
 		}});
-		negotiationAttrLevels.put("time", new HashMap<String, Integer>() {{
-			put("min", timeLeft/60);
-			put("max", (fuelLeft/fuelLoss)/speed);
+		// minimize amount of flight time
+		negotiationAttributes.put("time", new HashMap<Double, Double>() {{
+			put(timeLeft/60.0, 0.045);
+			put(timeLeft/60/2.0, 0.08);
+			put(((fuelLeft/fuelLoss)/speed)/2.0, 0.25);
+			put(1.0*(fuelLeft/fuelLoss)/speed, 0.5);
 		}});
-		negotiationAttrLevels.put("detour", new HashMap<String, Integer>() {{
-			put("min", 0);
-			put("max", fuelLeft/fuelLoss);
+		// minimize detour
+		negotiationAttributes.put("detour", new HashMap<Double, Double>() {{
+			put(1.0*fuelLeft/fuelLoss, 0.045);
+			put(fuelLeft/fuelLoss/2.0, 0.08);
+			put(1.0, 0.25);
+			put(0.0, 0.5);
 		}});
 	}
 
 	/**
 	 * Multi-attribute utility function to evalute negotiation attributes.
 	 */
-	protected int utilityFunction() {
-		float sumWeight = 0;
-		int sumUtil = 0;
+	protected double utilityFunction() {
+		double sumWeight = 0;
+		double sumUtil = 0;
 		
-		if (negotiationAttrLevels.size() != negotAttrWeight.size()) {
-			System.out.println("Error: number of negotiation set attributes' importance scores "
-					+ "do not match with given weights.");
-			return -1;
-		}
-		
-		for (Entry<String, Double> weight : negotAttrWeight.entrySet()) {
-			sumUtil += negotiationAttrLevels.get(weight.getKey()).get("min") * weight.getValue();
-			sumUtil += negotiationAttrLevels.get(weight.getKey()).get("max") * weight.getValue();
-			sumWeight += weight.getValue();
+		/**
+		 * não vai ser multiplicado por weight.getKey() provavelmente ;__;
+		 * ver primeiro link em notas.txt
+		 * multiplicado por valor [0,1]
+		 * que valor atribuir a valores em intervalo? :)
+		 */
+		for (Entry<String, HashMap<Double, Double>> attrCriteria : negotiationAttributes.entrySet()) {
+			for (Entry<Double, Double> weight : attrCriteria.getValue().entrySet()) {
+				sumUtil += weight.getKey()*weight.getValue();
+				sumUtil += weight.getKey()*weight.getValue();
+				sumWeight += weight.getValue();
+			}
 		}
 		
 		if (sumWeight != 1) {
@@ -143,12 +151,19 @@ public class Plane extends Agent
 		return sumUtil;
 	}
 	
-	protected int calcDealCost(HashMap<String, Integer> negotiationAttr) {
-		int sumCost = 0;
+	/**
+	 * REPENSAR!!!!!!! 
+	 * 
+	 * VALOR INSERE-SE NO INTERVALO DE VALORES EXCLUINDO IDEAL ALTERNATIVE/NADIR ALTERNATIVE
+	 * @param negotiationAttr
+	 * @return
+	 */
+	protected double calcDealCost(HashMap<Double, Double> negotiationAttr) {
+		double sumCost = 0;
 		
-		for (Entry<String, Double> weight : negotAttrWeight.entrySet()) {
-			sumCost += negotiationAttr.get(weight.getKey()) * weight.getValue();
-			sumCost += negotiationAttr.get(weight.getKey()) * weight.getValue();
+		for (Entry<Double, Double> weight : negotiationAttr.entrySet()) {
+			sumCost += weight.getKey()*weight.getValue();
+			sumCost += weight.getKey()*weight.getValue();
 		}
 		
 		return sumCost;
@@ -157,8 +172,8 @@ public class Plane extends Agent
 
 	void evaluateActions(ArrayList<String> proposals) {
 		int tempMoney = moneyAvailable;
-		int utility = utilityFunction();
-		int cost = utility;
+		double utility = utilityFunction();
+		double cost = utility;
 		int maxUtil = 0;
 		String chosenProposal = null;
 		
@@ -177,12 +192,12 @@ public class Plane extends Agent
 			result.put("time", timeLeft - 1/speed);
 			result.put("detour", distanceLeft + 1);
 			
-			cost -= calcDealCost(result);
+			/*cost -= calcDealCost(result);
 			
 			if (cost > maxUtil) {
 				maxUtil = cost;
 				chosenProposal = proposal;
-			}
+			}*/
 		}
 		
 		System.out.println("proposal = " + chosenProposal + ", cost final = " + cost + ", utility = " + utility);

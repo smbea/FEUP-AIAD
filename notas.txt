@@ -1,3 +1,7 @@
+https://www.researchgate.net/publication/323644587_New_weighted_sum_model
+http://mlwiki.org/index.php/Multi-Attribute_Utility_Theory#Examples
+
+---------------------------------------------------------------
 avião
    - [posição inicial]
    - posição atual (atualizada pelo avião)
