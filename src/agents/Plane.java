@@ -1,6 +1,7 @@
 package agents;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.Map.Entry;
@@ -52,7 +53,7 @@ public class Plane extends Agent
 	String[][] traffic = new String[5][5];
 	AMSAgentDescription [] agents = null;
 	AID myID;
-	HashMap<String, HashMap<Double, Double>> negotiationAttributes;
+	HashMap<String, LinkedHashMap<Double, Double>> negotiationAttributes;
 	
 	/**
 	 * Initialize Plane's Attributes.
@@ -100,71 +101,82 @@ public class Plane extends Agent
 		negotiationAttributes.remove("detour");
 		
 		// maximize amount of fuel
-		negotiationAttributes.put("fuel", new HashMap<Double, Double>() {{
+		negotiationAttributes.put("fuel", new LinkedHashMap<Double, Double>() {{
 			put(4000.0, 0.5);          // ideal alternative value
-			put(4000.0-fuelLoss, 0.25);     // lower limit of ideal values
-			put(4000.0-distanceLeft*fuelLoss/2, 0.08); // upper limit for barely acceptable value
-			put(4000.0-distanceLeft*fuelLoss, 0.045); // lowest acceptable value
+			put(4000.0-fuelLoss, 0.3);     // lower limit of ideal values
+			put(4000.0-distanceLeft*fuelLoss/2, 0.15); // upper limit for barely acceptable value
+			put(4000.0-distanceLeft*fuelLoss, 0.05); // lowest acceptable value
 		}});
 		// minimize amount of flight time
-		negotiationAttributes.put("time", new HashMap<Double, Double>() {{
-			put(timeLeft/60.0, 0.045);
-			put(timeLeft/60/2.0, 0.08);
-			put(((fuelLeft/fuelLoss)/speed)/2.0, 0.25);
+		negotiationAttributes.put("time", new LinkedHashMap<Double, Double>() {{
+			put(timeLeft/60.0, 0.05);
+			put(timeLeft/60/2.0, 0.15);
+			put(((fuelLeft/fuelLoss)/speed)/2.0, 0.3);
 			put(1.0*(fuelLeft/fuelLoss)/speed, 0.5);
 		}});
 		// minimize detour
-		negotiationAttributes.put("detour", new HashMap<Double, Double>() {{
-			put(1.0*fuelLeft/fuelLoss, 0.045);
-			put(fuelLeft/fuelLoss/2.0, 0.08);
-			put(1.0, 0.25);
+		negotiationAttributes.put("detour", new LinkedHashMap<Double, Double>() {{
+			put(1.0*fuelLeft/fuelLoss, 0.05);
+			put(fuelLeft/fuelLoss/2.0, 0.15);
+			put(1.0, 0.3);
 			put(0.0, 0.5);
 		}});
+	}
+	
+	double valueNormalizationFuncion(double value, double min, double max) {
+		return (value - min)/(max - min);
 	}
 
 	/**
 	 * Multi-attribute utility function to evalute negotiation attributes.
 	 */
 	protected double utilityFunction() {
-		double sumWeight = 0;
 		double sumUtil = 0;
+		double min = 0, max = 0;
 		
-		/**
-		 * não vai ser multiplicado por weight.getKey() provavelmente ;__;
-		 * ver primeiro link em notas.txt
-		 * multiplicado por valor [0,1]
-		 * que valor atribuir a valores em intervalo? :)
-		 */
-		for (Entry<String, HashMap<Double, Double>> attrCriteria : negotiationAttributes.entrySet()) {
+		for (Entry<String, LinkedHashMap<Double, Double>> attrCriteria : negotiationAttributes.entrySet()) {
+			int index = 0;
+			double sumWeight = 0;
+			
 			for (Entry<Double, Double> weight : attrCriteria.getValue().entrySet()) {
-				sumUtil += weight.getKey()*weight.getValue();
-				sumUtil += weight.getKey()*weight.getValue();
+				if (index == 0) {
+					min = weight.getValue();
+				} else if (index == negotiationAttributes.get(attrCriteria.getKey()).size() - 1) {
+					max = weight.getValue();
+				}
 				sumWeight += weight.getValue();
+				System.out.println("weight = " + weight.getKey() + " sum = " + sumWeight);
+				System.out.println("size = " + negotiationAttributes.get(attrCriteria.getKey()).size());
 			}
-		}
-		
-		if (sumWeight != 1) {
-			System.out.println("Error: negotiation set attributes' weight does not sum up to one.");
-			return -1;
+			
+			System.out.println("attr = " + attrCriteria.getKey() + " , before print "+sumWeight);
+			
+			if (sumWeight != 1.0) {
+				System.out.println("Error: negotiation set attributes' weight does not sum up to one.");
+				return -1;
+			}
+			
+			for (Entry<Double, Double> weight : attrCriteria.getValue().entrySet()) {
+				sumUtil += valueNormalizationFuncion(weight.getKey(), min, max)*weight.getValue();
+			}
 		}
 		
 		return sumUtil;
 	}
 	
 	/**
-	 * REPENSAR!!!!!!! 
 	 * 
-	 * VALOR INSERE-SE NO INTERVALO DE VALORES EXCLUINDO IDEAL ALTERNATIVE/NADIR ALTERNATIVE
 	 * @param negotiationAttr
 	 * @return
 	 */
 	protected double calcDealCost(HashMap<Double, Double> negotiationAttr) {
 		double sumCost = 0;
 		
+		/*
 		for (Entry<Double, Double> weight : negotiationAttr.entrySet()) {
-			sumCost += weight.getKey()*weight.getValue();
-			sumCost += weight.getKey()*weight.getValue();
+			sumCost += valueNormalizationFuncion(weight.getKey(), min, max)*weight.getValue();
 		}
+		*/
 		
 		return sumCost;
 	}
