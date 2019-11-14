@@ -26,10 +26,11 @@ public class PlaneCoop
 	/**
 	 * Predicted Flight Time Left (minutes)
 	 */
-	private int timeLeft = 40;
+	private int timeLeft = (int)((double)(fuelLeft/fuelLoss)/speed*60);
 	private int bid=10;
 	int minAcceptBid=15;
-	private int moneyAvailable = 20;
+	int maxDelay = 2*timeLeft;
+	private int moneyAvailable = 30;
 	private Queue<String> route = new LinkedList<>(){{add("DDR");add("DDR");add("DDR");add("DDR");}};
 	private HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	private HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 4);put("y", 4);}};
@@ -37,41 +38,6 @@ public class PlaneCoop
 	 * Current Distance Left (km)
 	 */
 	private int distanceLeft = getRoute().size();
-
-	/**
-	 * Numerical value that is attached to a particular attribute's level. 
-	 * A higher value is generally related to more attractiveness.
-	 */
-	private HashMap<String, LinkedHashMap<Double, Double>> negotiationAttributes = new HashMap<String, LinkedHashMap<Double, Double>>() {{
-		// minimize amount of money spent
-		put("money", new LinkedHashMap<Double, Double>() {{
-			put(30.0, 0.05); // nadir alternative value
-			put(29.0, 0.15);  // upper limit for barely acceptable
-			put(1.0, 0.3);   // lower limit of ideal values
-			put(0.0, 0.5);    // ideal alternative value
-		}});
-		// maximize amount of fuel
-		put("fuel", new LinkedHashMap<Double, Double>() {{
-			put(4000.0, 0.5);          // ideal alternative value
-			put(4000.0-getFuelLoss(), 0.3);     // lower limit of ideal values
-			put(4000.0-getDistanceLeft()*getFuelLoss()/2, 0.15); // upper limit for barely acceptable value
-			put(4000.0-getDistanceLeft()*getFuelLoss(), 0.05); // lowest acceptable value
-		}});
-		// minimize amount of flight time
-		put("time", new LinkedHashMap<Double, Double>() {{
-			put(getTimeLeft()/60.0, 0.05);
-			put(getTimeLeft()/60/2.0, 0.15);
-			put(((getFuelLeft()/getFuelLoss())/getSpeed())/2.0, 0.3);
-			put(1.0*(getFuelLeft()/getFuelLoss())/getSpeed(), 0.5);
-		}});
-		// minimize detour
-		put("detour", new LinkedHashMap<Double, Double>() {{
-			put(1.0*getFuelLeft()/getFuelLoss(), 0.05);
-			put(getFuelLeft()/getFuelLoss()/2.0, 0.15);
-			put(1.0, 0.3);
-			put(0.0, 0.5);
-		}});
-	}};
 	
 	public PlaneCoop() {}
 
@@ -123,14 +89,6 @@ public class PlaneCoop
 		this.bid = bid;
 	}
 
-	public HashMap<String, LinkedHashMap<Double, Double>> getNegotiationAttributes() {
-		return negotiationAttributes;
-	}
-
-	public void setNegotiationAttributes(HashMap<String, LinkedHashMap<Double, Double>> negotiationAttributes) {
-		this.negotiationAttributes = negotiationAttributes;
-	}
-
 	public Queue<String> getRoute() {
 		return route;
 	}
@@ -162,8 +120,12 @@ public class PlaneCoop
 	public void setMoneyAvailable(int moneyAvailable) {
 		this.moneyAvailable = moneyAvailable;
 	}
+
+	public int getMaxDelay() {
+		return maxDelay;
+	}
 	
-	/**
-	 * CRIAR FUNÇÃO DE ASSIGN DE PESO
-	 */
+	public void setMaxDelay(int maxDelay) {
+		this.maxDelay = maxDelay;
+	}
 } 

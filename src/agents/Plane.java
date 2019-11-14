@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Queue;
+import java.util.Random;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
@@ -57,7 +58,11 @@ public class Plane extends Agent
 	String[][] traffic = new String[5][5];
 	AMSAgentDescription [] agents = null;
 	AID myID;
-	HashMap<String, LinkedHashMap<Double, Double>> negotiationAttributes;
+	int maxDelay;
+	/**
+	 * Numerical value that is attached to a particular attribute's level. A higher value is generally related to more attractiveness.
+	 */
+	LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes;
 	
 	/**
 	 * Initialize Plane's Attributes.
@@ -75,11 +80,11 @@ public class Plane extends Agent
 			fuelLoss = plane.getFuelLoss();
 			timeLeft = plane.getTimeLeft();
 			bid = plane.getBid();
-			negotiationAttributes = plane.getNegotiationAttributes();
 			route = plane.getRoute();
 			distanceLeft = plane.getDistanceLeft();
 			speed = plane.getSpeed();
 			moneyAvailable = plane.getMoneyAvailable();
+			maxDelay = plane.getMaxDelay();
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
 			actualPos = plane.getActualPos();
@@ -88,13 +93,51 @@ public class Plane extends Agent
 			fuelLoss = plane.getFuelLoss();
 			timeLeft = plane.getTimeLeft();
 			bid = plane.getBid();
-			negotiationAttributes = plane.getNegotiationAttributes();
 			route = plane.getRoute();
 			distanceLeft = plane.getDistanceLeft();
 			speed = plane.getSpeed();
 			moneyAvailable = plane.getMoneyAvailable();
+			maxDelay = plane.getMaxDelay();
 		}
+		
+		negotiationAttributes = new LinkedHashMap<String, LinkedHashMap<Integer, Double>>() {{
+			// minimize amount of money spent
+			put("money", generateWeight(moneyAvailable, 0, 0.4));
+			// minimize amount of fuel spent
+			put("fuel", generateWeight(fuelLeft, distanceLeft*fuelLoss, 0.4));
+			// minimize amount of flight time
+			put("time", generateWeight(maxDelay, timeLeft, 0.4));
+			// minimize detour
+			put("detour", generateWeight(fuelLeft/fuelLoss, 0, 0.4));
+		}};
+		
+		System.out.println(negotiationAttributes);
 	}
+	
+	public LinkedHashMap<Integer, Double> generateWeight(int max, int min, double maxWeight) {
+		LinkedHashMap<Integer, Double> weights = new LinkedHashMap<Integer, Double>();
+		
+		weights.put(min, maxWeight);
+
+		Random rand = new Random();
+		double sum = maxWeight;
+		double previousRand = maxWeight;
+		double actualRand = maxWeight;
+		
+		for(int i = min + 1; i <= max; i++) {
+			while(actualRand >= previousRand || sum + actualRand >= 1) {
+				actualRand = rand.nextDouble();
+			}
+			sum += actualRand;	
+			weights.put(i, actualRand);
+		}
+		
+		System.out.println("weight = " + sum);
+			
+		return weights;
+	}
+	
+	
 	
 	/**
 	 * Update dynamic numerical values of negotiation attributes.
@@ -103,7 +146,7 @@ public class Plane extends Agent
 		negotiationAttributes.remove("fuel");
 		negotiationAttributes.remove("time");
 		negotiationAttributes.remove("detour");
-		
+	/*	
 		// maximize amount of fuel
 		negotiationAttributes.put("fuel", new LinkedHashMap<Double, Double>() {{
 			put(4000.0, 0.5);          // ideal alternative value
@@ -125,6 +168,7 @@ public class Plane extends Agent
 			put(1.0, 0.3);
 			put(0.0, 0.5);
 		}});
+		*/
 	}
 	
 	double valueNormalizationFuncion(double value, double min, double max) {
@@ -138,11 +182,11 @@ public class Plane extends Agent
 		double sumUtil = 0;
 		double min = 0, max = 0;
 		
-		for (Entry<String, LinkedHashMap<Double, Double>> attrCriteria : negotiationAttributes.entrySet()) {
+		for (Entry<String, LinkedHashMap<Integer, Double>> attrCriteria : negotiationAttributes.entrySet()) {
 			int index = 0;
 			double sumWeight = 0;
 			
-			for (Entry<Double, Double> weight : attrCriteria.getValue().entrySet()) {
+			for (Entry<Integer, Double> weight : attrCriteria.getValue().entrySet()) {
 				if (index == 0) {
 					min = weight.getValue();
 				} else if (index == negotiationAttributes.get(attrCriteria.getKey()).size() - 1) {
@@ -160,7 +204,7 @@ public class Plane extends Agent
 				return -1;
 			}
 			
-			for (Entry<Double, Double> weight : attrCriteria.getValue().entrySet()) {
+			for (Entry<Integer, Double> weight : attrCriteria.getValue().entrySet()) {
 				sumUtil += valueNormalizationFuncion(weight.getKey(), min, max)*weight.getValue();
 			}
 		}

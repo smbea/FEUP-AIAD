@@ -1,6 +1,7 @@
 package agents;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 
 import jade.core.Agent;
@@ -60,7 +61,7 @@ public class ATC extends Agent {
 						System.out.println(planePos);
 						
 						String conflict = Util.checkConflict(planePos, traffic, msg.getSender().getLocalName());
-					// trafficS = Arrays.deepToString(traffic);
+
 						String message;
 						
 						if (conflict.equals("none")) {
@@ -94,6 +95,8 @@ public class ATC extends Agent {
 						ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 						cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
 						cfp.setContent(cfpContent);
+						cfp.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+						// add all receivers FUTURE
 						cfp.addReceiver(msg.getSender());
 						
 						ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
