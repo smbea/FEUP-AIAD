@@ -96,9 +96,9 @@ public class ATC extends Agent {
 						cfp.setContent(cfpContent);
 						cfp.addReceiver(msg.getSender());
 						
-						//ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
+						ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
 						
-						//initiator.prepareCfps(cfp);
+						initiator.prepareCfps(cfp);
 						//initiator.sendMessage();
 					}
 					else {

@@ -19,6 +19,15 @@ public class Util
 		}
 		return cidBase + (cidCnt++);
 	}
+	
+	/**
+	 * MUDAR!!!!!!!
+	 * @return
+	 */
+	public static int evaluateAction() {
+		// Simulate an evaluation by generating a random number
+		return (int) (Math.random() * 10);
+	}
 	 
 	public static void move(Queue<String> route, HashMap<String, Integer> actualPos, int distanceLeft) {
 		String nextMove = route.remove();
