@@ -4,18 +4,24 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.AMSService;
 import jade.domain.FIPANames;
+import jade.domain.FIPAAgentManagement.AMSAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
+import jade.proto.ContractNetInitiator;
 import protocols.ContractNetInitiatorAgent;
 import utils.Util;
 
 @SuppressWarnings("serial")
 public class ATC extends Agent {
-	String[][] traffic = new String[5][5];
-	boolean comm = false;
-	String method;
+	private String[][] traffic = new String[5][5];
+	private boolean comm = false;
+	private String method;
+	private AMSAgentDescription [] agents = null;
 	
 	protected void createTraffic() {
 		Object[] args = getArguments();
@@ -42,6 +48,19 @@ public class ATC extends Agent {
 	}
 	
 	protected void centralizedBehaviour() {
+		ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+		cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+		cfp.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+		for (int i = 0; i < agents.length; i++) {
+			 AID agentID = agents[i].getName();
+			if (!agentID.getName().equals(this.getName())) {
+				cfp.addReceiver(agentID);
+			}
+		}
+		
+		addBehaviour(new ContractNetInitiatorAgent(this, cfp));
+		
+		/*
 		// receive message from plane informing move done
 		addBehaviour(new CyclicBehaviour() {
 			@Override
@@ -67,14 +86,22 @@ public class ATC extends Agent {
 						if (conflict.equals("none")) {
 							message = "Continue";
 							System.out.println("CONTINUE - SAYS ATC");
+							reply.setContent(message);
+							reply.addReceiver(msg.getSender());
+							send(reply);
+							block();
 						} else {
-							message = "Conflict";
 							System.out.println("CONFLICT DETECTED IN ATC");
+							
+							ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+							cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+							cfp.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+							// add all receivers FUTURE
+							cfp.addReceiver(msg.getSender());
+							
+							addBehaviour(new ContractNetInitiatorAgent(this, myAgent, cfp)); 
 						}
-						reply.setContent(message);
-						reply.addReceiver(msg.getSender());
-						send(reply);
-						block();
+
 					} else if(content.contains("Move")) {						
 						for (int i = 0; i < traffic.length; i++) {
 							for (int j = 0; j < traffic[i].length; j++) {
@@ -90,28 +117,28 @@ public class ATC extends Agent {
 						
 						System.out.println("Updated grid!");
 						
-						String cfpContent = "Get_Proposals";
 						
-						ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-						cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-						cfp.setContent(cfpContent);
-						cfp.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+						//String cfpContent = "Get_Proposals";
+						
+						//ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+						//cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+						//cfp.setContent(cfpContent);
+						//cfp.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
 						// add all receivers FUTURE
-						cfp.addReceiver(msg.getSender());
+						//cfp.addReceiver(msg.getSender());
 						
-						ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
+						//ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
 						
-						initiator.prepareCfps(cfp);
+						//initiator.prepareCfps(cfp);
 						//initiator.sendMessage();
+						 
 					}
 					else {
 						System.out.println("Not traffic");
 					}
 				}
 			}
-
-			
-		});
+		});*/
 	}
 	
 	protected void descentralizedBehaviour() {
@@ -155,8 +182,17 @@ public class ATC extends Agent {
 		});
 	}
 	
+	@SuppressWarnings("deprecation")
 	protected void setup() 
     {	
+	    try {
+	        SearchConstraints c = new SearchConstraints();
+	        c.setMaxResults ( new Long(-1) );
+	        agents = AMSService.search( this, new AMSAgentDescription (), c );
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+	    
 		createTraffic();
 		
 		if(method.equals("descentralized")){
@@ -165,7 +201,6 @@ public class ATC extends Agent {
     		//CODAR ATC PARA centralized. Semelhante ao de cima mas em vez de devolver
     		//checka conflito e começa negocição como initiator pedindo aos avios em
     		//conflito (responders) propopsals escolhendo depois a melhor
-    		
     		centralizedBehaviour();
     	}
     }

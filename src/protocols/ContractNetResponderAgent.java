@@ -1,5 +1,8 @@
 package protocols;
 
+import java.util.LinkedHashMap;
+import java.util.Random;
+
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -9,6 +12,7 @@ import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.FailureException;
 import utils.Util;
 
+@SuppressWarnings("serial")
 public class ContractNetResponderAgent extends ContractNetResponder {
 	Agent agent;
 	MessageTemplate mt;
@@ -19,10 +23,16 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		this.mt = mt;
 	}
 
+	/**
+	 * Handle initial CFP message.
+	 * 
+	 * @param cfp call-for-proposal received from initiator
+	 * @return proposal
+	 */
 	@Override
 	protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 		System.out.println("Agent " + agent.getLocalName() + ": CFP received from " + cfp.getSender().getName()
-				+ ". Action is " + cfp.getContent());
+				+ ". Action is '" + cfp.getContent() + "'");
 		int proposal = Util.evaluateAction();
 		if (proposal > 2) {
 			// We provide a proposal
@@ -60,5 +70,33 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	private boolean performAction() {
 		// Simulate action execution by generating a random number
 		return (Math.random() > 0.2);
+	}
+	
+	/**
+	 * For each available action, generate a weight considering the agent's wish to minimize it.
+	 * @param max
+	 * @param min
+	 * @param maxWeight
+	 * @return
+	 */
+	public LinkedHashMap<Integer, Double> generateWeight(int max, int min, double maxWeight) {
+		LinkedHashMap<Integer, Double> weights = new LinkedHashMap<Integer, Double>();
+		
+		weights.put(min, maxWeight);
+
+		Random rand = new Random();
+		double sum = maxWeight;
+		double previousRand = maxWeight;
+		double actualRand = maxWeight;
+		
+		for(int i = min + 1; i <= max; i++) {
+			while(actualRand >= previousRand || sum + actualRand >= 1) {
+				actualRand = rand.nextDouble();
+			}
+			sum += actualRand;	
+			weights.put(i, actualRand);
+		}
+			
+		return weights;
 	}
 }

@@ -1,4 +1,5 @@
 package agents;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,8 +21,7 @@ import utils.PlaneCoop;
 import utils.Util;
 
 @SuppressWarnings("serial")
-public class Plane extends Agent 
-{     
+public class Plane extends Agent {
 	/**
 	 * Fuel Left (liters)
 	 */
@@ -56,22 +56,24 @@ public class Plane extends Agent
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
 	String[][] traffic = new String[5][5];
-	AMSAgentDescription [] agents = null;
+	AMSAgentDescription[] agents = null;
 	AID myID;
 	int maxDelay;
 	/**
-	 * Numerical value that is attached to a particular attribute's level. A higher value is generally related to more attractiveness.
+	 * Numerical value that is attached to a particular attribute's level. A higher
+	 * value is generally related to more attractiveness.
 	 */
 	LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes;
-	
+	ContractNetResponderAgent responder;
+
 	/**
 	 * Initialize Plane's Attributes.
 	 */
 	protected void argCreation() {
 		Object[] args = getArguments();
-		name=getLocalName();
-		method=(String) args[0];
-	
+		name = getLocalName();
+		method = (String) args[0];
+
 		if (name.equals("Coop")) {
 			PlaneCoop plane = new PlaneCoop();
 			actualPos = plane.getActualPos();
@@ -99,80 +101,10 @@ public class Plane extends Agent
 			moneyAvailable = plane.getMoneyAvailable();
 			maxDelay = plane.getMaxDelay();
 		}
-		
-		negotiationAttributes = new LinkedHashMap<String, LinkedHashMap<Integer, Double>>() {{
-			// minimize amount of money spent
-			put("money", generateWeight(moneyAvailable, 0, 0.4));
-			// minimize amount of fuel spent
-			put("fuel", generateWeight(fuelLeft, distanceLeft*fuelLoss, 0.4));
-			// minimize amount of flight time
-			put("time", generateWeight(maxDelay, timeLeft, 0.4));
-			// minimize detour
-			put("detour", generateWeight(fuelLeft/fuelLoss, 0, 0.4));
-		}};
-		
-		System.out.println(negotiationAttributes);
 	}
-	
-	public LinkedHashMap<Integer, Double> generateWeight(int max, int min, double maxWeight) {
-		LinkedHashMap<Integer, Double> weights = new LinkedHashMap<Integer, Double>();
-		
-		weights.put(min, maxWeight);
 
-		Random rand = new Random();
-		double sum = maxWeight;
-		double previousRand = maxWeight;
-		double actualRand = maxWeight;
-		
-		for(int i = min + 1; i <= max; i++) {
-			while(actualRand >= previousRand || sum + actualRand >= 1) {
-				actualRand = rand.nextDouble();
-			}
-			sum += actualRand;	
-			weights.put(i, actualRand);
-		}
-		
-		System.out.println("weight = " + sum);
-			
-		return weights;
-	}
-	
-	
-	
-	/**
-	 * Update dynamic numerical values of negotiation attributes.
-	 */
-	void updateNegotiationAttrLevels() {
-		negotiationAttributes.remove("fuel");
-		negotiationAttributes.remove("time");
-		negotiationAttributes.remove("detour");
-	/*	
-		// maximize amount of fuel
-		negotiationAttributes.put("fuel", new LinkedHashMap<Double, Double>() {{
-			put(4000.0, 0.5);          // ideal alternative value
-			put(4000.0-fuelLoss, 0.3);     // lower limit of ideal values
-			put(4000.0-distanceLeft*fuelLoss/2, 0.15); // upper limit for barely acceptable value
-			put(4000.0-distanceLeft*fuelLoss, 0.05); // lowest acceptable value
-		}});
-		// minimize amount of flight time
-		negotiationAttributes.put("time", new LinkedHashMap<Double, Double>() {{
-			put(timeLeft/60.0, 0.05);
-			put(timeLeft/60/2.0, 0.15);
-			put(((fuelLeft/fuelLoss)/speed)/2.0, 0.3);
-			put(1.0*(fuelLeft/fuelLoss)/speed, 0.5);
-		}});
-		// minimize detour
-		negotiationAttributes.put("detour", new LinkedHashMap<Double, Double>() {{
-			put(1.0*fuelLeft/fuelLoss, 0.05);
-			put(fuelLeft/fuelLoss/2.0, 0.15);
-			put(1.0, 0.3);
-			put(0.0, 0.5);
-		}});
-		*/
-	}
-	
 	double valueNormalizationFuncion(double value, double min, double max) {
-		return (value - min)/(max - min);
+		return (value - min) / (max - min);
 	}
 
 	/**
@@ -181,11 +113,11 @@ public class Plane extends Agent
 	protected double utilityFunction() {
 		double sumUtil = 0;
 		double min = 0, max = 0;
-		
+
 		for (Entry<String, LinkedHashMap<Integer, Double>> attrCriteria : negotiationAttributes.entrySet()) {
 			int index = 0;
 			double sumWeight = 0;
-			
+
 			for (Entry<Integer, Double> weight : attrCriteria.getValue().entrySet()) {
 				if (index == 0) {
 					min = weight.getValue();
@@ -196,39 +128,36 @@ public class Plane extends Agent
 				System.out.println("weight = " + weight.getKey() + " sum = " + sumWeight);
 				System.out.println("size = " + negotiationAttributes.get(attrCriteria.getKey()).size());
 			}
-			
-			System.out.println("attr = " + attrCriteria.getKey() + " , before print "+sumWeight);
-			
+
+			System.out.println("attr = " + attrCriteria.getKey() + " , before print " + sumWeight);
+
 			if (sumWeight != 1.0) {
 				System.out.println("Error: negotiation set attributes' weight does not sum up to one.");
 				return -1;
 			}
-			
+
 			for (Entry<Integer, Double> weight : attrCriteria.getValue().entrySet()) {
-				sumUtil += valueNormalizationFuncion(weight.getKey(), min, max)*weight.getValue();
+				sumUtil += valueNormalizationFuncion(weight.getKey(), min, max) * weight.getValue();
 			}
 		}
-		
+
 		return sumUtil;
 	}
-	
+
 	/**
 	 * 
 	 * @param negotiationAttr
 	 * @return
 	 */
-	protected double calcDealCost(HashMap<Double, Double> negotiationAttr) {
+	protected double calcDealCost(HashMap<Integer, Double> action) {
 		double sumCost = 0;
-		
-		/*
-		for (Entry<Double, Double> weight : negotiationAttr.entrySet()) {
-			sumCost += valueNormalizationFuncion(weight.getKey(), min, max)*weight.getValue();
+/*
+		for (Entry<Integer, Double> actionItem : action.entrySet()) {
+			sumCost += valueNormalizationFuncion(actionItem.getKey(), min, max) * actionItem.getValue();
 		}
-		*/
-		
+*/
 		return sumCost;
 	}
-	
 
 	void evaluateActions(ArrayList<String> proposals) {
 		int tempMoney = moneyAvailable;
@@ -236,76 +165,87 @@ public class Plane extends Agent
 		double cost = utility;
 		int maxUtil = 0;
 		String chosenProposal = null;
-		
-		for (String proposal: proposals) {
+
+		for (String proposal : proposals) {
 			cost = utility;
 			int index;
 			int paidMoney;
-			if ((index = proposal.indexOf("Propose_Payment")) != -1) {
+			if ((index = proposal.indexOf("Payment")) != -1) {
 				paidMoney = Integer.parseInt(proposal.substring(index + 16));
 				tempMoney -= paidMoney;
 			}
-			
+
 			HashMap<String, Integer> result = new HashMap<String, Integer>();
-			result.put("fuel", fuelLeft-fuelLoss);
+			result.put("fuel", fuelLeft - fuelLoss);
 			result.put("money", tempMoney);
-			result.put("time", timeLeft - 1/speed);
+			result.put("time", timeLeft - 1 / speed);
 			result.put("detour", distanceLeft + 1);
-			
-			/*cost -= calcDealCost(result);
-			
+/*
+			cost -= calcDealCost(result);
+
 			if (cost > maxUtil) {
 				maxUtil = cost;
 				chosenProposal = proposal;
 			}*/
 		}
-		
+
 		System.out.println("proposal = " + chosenProposal + ", cost final = " + cost + ", utility = " + utility);
 	}
-	
+
 	/**
 	 * 
 	 * @return
 	 */
-	ArrayList<String> getActions() {
+	ArrayList<String> createActionMessages() {
 		ArrayList<String> proposals = new ArrayList<String>();
 		String proposal;
-		ArrayList<String> possibleMoves = new ArrayList<String>() {{add("U");add("D");
-		add("R");add("L");add("DDR");add("DDL");add("DUR");add("DUL");}};
+		ArrayList<String> possibleMoves = new ArrayList<String>() {
+			{
+				add("U");
+				add("D");
+				add("R");
+				add("L");
+				add("DDR");
+				add("DDL");
+				add("DUR");
+				add("DUL");
+			}
+		};
 
 		for (int i = 0; i < possibleMoves.size(); i++) {
-			proposal = "Propose_Move " + possibleMoves.get(i);
+			proposal = "Agent " + this.getLocalName() + ": Proposes Move " + possibleMoves.get(i);
 			if (possibleMoves.get(i).equals(route.element())) {
-				proposal += ", Propose_Payment " + bid;
+				proposal += " and Payment " + bid;
 			}
 			proposals.add(proposal);
 		}
-		
+
 		for (int i = 0; i < proposals.size(); i++) {
 			System.out.println(proposals.get(i));
 		}
-		
+
 		return proposals;
 	}
-	
+
 	/**
-	 * Implements Descentralized Air Traffic, i.e., planes communicate and negotiate with each other.
+	 * Implements Descentralized Air Traffic, i.e., planes communicate and negotiate
+	 * with each other.
 	 */
 	protected void descentralizedBehaviour() {
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
-		
-		Behaviour movement = new TickerBehaviour(this, (Util.getMovementCost()/speed)*1000) {
-				
+
+		Behaviour movement = new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000) {
+
 			@Override
 			protected void onTick() {
-				
-				if(actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
+
+				if (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
 					System.out.println("I " + name + " arrived at destiny");
 					finished = true;
 					stop();
 				}
-				
-				if(!finished) {
+
+				if (!finished) {
 					try {
 						ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 						msg.setContent("traffic " + actualPos.get("x") + " " + actualPos.get("y"));
@@ -319,29 +259,29 @@ public class Plane extends Agent
 					answer = blockingReceive();
 					String s = answer.getContent();
 					traffic = Util.refactorTrafficArray(s);
-					
+
 					Util.checkConflict(actualPos, traffic, name);
-					
+
 					if (Util.getConflicts().containsKey(name)) {
 						conflictPlane = Util.getConflicts().get(name);
 						negot = true;
 					}
-					
+
 					if (!negot) {
-						if(conflictPlane.equals("none")){
+						if (conflictPlane.equals("none")) {
 							System.out.println("Plane " + name + " ready to move");
 							Util.move(route, actualPos, distanceLeft);
 						} else {
 							negot = true;
 						}
-				
+
 					}
 				}
-			  }
-			};
-			
+			}
+		};
+
 		parallel.addSubBehaviour(movement);
-			
+
 		parallel.addSubBehaviour(new SimpleBehaviour() {
 
 			@Override
@@ -354,7 +294,6 @@ public class Plane extends Agent
 
 				if (Util.getConflicts().containsKey(name))
 					conflictPlane = Util.getConflicts().get(name);
-				
 
 				if (!conflictPlane.equals("none") || Util.getConflicts().containsKey(name)) {
 					negot = true;
@@ -368,11 +307,11 @@ public class Plane extends Agent
 
 						@Override
 						public void action() {
-							if(Util.getInitiator().equals("null"))
+							if (Util.getInitiator().equals("null"))
 								Util.setInitiator(name);
 							else
 								Util.setResponder(name);
-							
+
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("negotiation");
 							msg.addReceiver(getAID(conflictPlane));
@@ -387,11 +326,10 @@ public class Plane extends Agent
 									String s = answer.getContent();
 									System.out.println(
 											"Plane: " + name + " " + s + " with " + answer.getSender().getLocalName());
-									
-									
-									if(Util.getInitiator().equals(name)) {
+
+									if (Util.getInitiator().equals(name)) {
 										System.out.println("Plane: " + name + " is initiator");
-									} else if(Util.getResponder().equals(name)) {
+									} else if (Util.getResponder().equals(name)) {
 										System.out.println("Plane: " + name + " is responder");
 									}
 								}
@@ -411,30 +349,38 @@ public class Plane extends Agent
 				comm = true;
 			}
 		});
-		
+
 		addBehaviour(parallel);
 	}
-	
+
 	/**
-	 * Implements Centralized Air Traffic, i.e., planes communicate and negotiate with ATC.
+	 * Implements Centralized Air Traffic, i.e., planes communicate and negotiate
+	 * with ATC.
 	 */
 	protected void centralizedBehaviour() {
-		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
+		MessageTemplate template = MessageTemplate.and(
+				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
+				MessageTemplate.MatchPerformative(ACLMessage.CFP));
 		
-		Behaviour movement = new TickerBehaviour(this, (Util.getMovementCost()/speed)*1000) {
-				
+		addBehaviour(new ContractNetResponderAgent(this, template));
+		
+		/*
+		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
+
+		Behaviour movement = new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000) {
+
 			@Override
 			protected void onTick() {
-				
-				if(actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
+
+				if (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
 					System.out.println("I " + name + " arrived at destiny");
 					finished = true;
 					stop();
 				}
-				
-				if(!finished) {
+
+				if (!finished) {
 					try {
-						ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+						ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 						msg.setContent("Request_Move " + actualPos.get("x") + " " + actualPos.get("y"));
 						msg.addReceiver(getAID("control"));
 						send(msg);
@@ -447,14 +393,14 @@ public class Plane extends Agent
 					String s = answer.getContent();
 
 					if (s.contentEquals("Conflict")) {
-						//negot = true;
+						// negot = true;
 						System.out.println("CONFLICT DETECTED IN " + name);
 						block();
 					} else {
 						System.out.println("NO CONFLICT IN " + name);
 						System.out.println("Plane " + name + " ready to move");
 						Util.move(route, actualPos, distanceLeft);
-						try  {
+						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Move " + actualPos.get("x") + " " + actualPos.get("y"));
 							msg.addReceiver(getAID("control"));
@@ -462,58 +408,74 @@ public class Plane extends Agent
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
-						
+
 					}
 				}
-			  }
-			};
-			
-			parallel.addSubBehaviour(movement);
-			
-			Behaviour receiveProposal = new CyclicBehaviour( ) {
-				
-				@Override
-				public void action() {
-					ACLMessage msg = receive();
-					if(msg != null) {
-						String content = msg.getContent();		
-						if(content.contains("Get_Proposals")) {
-							
-							System.out.println("Get Proposals Received By " + name);
-							/*ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-							reply.setContent(trafficS);
-							reply.addReceiver(msg.getSender());
-							send(reply);
-							block();
-					*/
-							MessageTemplate template = MessageTemplate.and(
-							  		MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
-							  		MessageTemplate.MatchPerformative(ACLMessage.CFP) );
-							
-							//ContractNetResponderAgent responder = new ContractNetResponderAgent(this.getAgent(), template);
-							
-							//evaluateActions(getActions());
-							//responder.prepareResponse(cfp);
-							//responder.sendMessage();
-						}
-				};
+			//}
+			 
+		};
+
+		parallel.addSubBehaviour(movement);
+
+		Behaviour receiveProposal = new CyclicBehaviour() {
+
+			@Override
+			public void action() {
+				ACLMessage msg = receive();
+				if (msg != null) {
+					String content = msg.getContent();
+					if (content.contains("Get_Proposals")) {
+
+						System.out.println("Get Proposals Received By " + name);
+
+						MessageTemplate template = MessageTemplate.and(
+								MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
+								MessageTemplate.MatchPerformative(ACLMessage.CFP));
+
+						ContractNetResponderAgent responder = new ContractNetResponderAgent(this.getAgent(), template);
+
+						System.out.println("OIIIII");
+						
+						negotiationAttributes = new LinkedHashMap<String, LinkedHashMap<Integer, Double>>() {
+							{
+								// minimize amount of money spent
+								put("money", responder.generateWeight(moneyAvailable, 0, 0.4));
+								// minimize amount of fuel spent
+								put("fuel", responder.generateWeight(fuelLeft, distanceLeft * fuelLoss, 0.4));
+								// minimize amount of flight time
+								put("time", responder.generateWeight(maxDelay, timeLeft, 0.4));
+								// minimize detour
+								put("detour", responder.generateWeight(fuelLeft / fuelLoss, 0, 0.4));
+							}
+						};
+						
+						
+						
+						createActionMessages();
+
+						// evaluateActions(getActions());
+						// responder.prepareResponse(cfp);
+						// responder.sendMessage();
+					}
 				}
-			};
-			
-			parallel.addSubBehaviour(receiveProposal);
-			
-			addBehaviour(parallel);
+				;
+			}
+		};
+
+		parallel.addSubBehaviour(receiveProposal);
+
+		addBehaviour(parallel);*/
 	}
-	
-	protected void setup() 
-    {
+
+	protected void setup() {
 		argCreation();
-		
-		if(method.equals("descentralized")) {
+
+		if (method.equals("descentralized")) {
 			descentralizedBehaviour();
-		} else if(method.equals("centralized")) {
-			//CODAR BEHAVIOURS CENTRALIZED. MOVE igual ao de cima. Modificar segundo behaviour
+		} else if (method.equals("centralized")) {
+			// CODAR BEHAVIOURS CENTRALIZED. MOVE igual ao de cima. Modificar segundo
+			// behaviour
 			centralizedBehaviour();
 		}
-    }  
+	}
 }

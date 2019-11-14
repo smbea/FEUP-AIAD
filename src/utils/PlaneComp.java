@@ -1,16 +1,7 @@
 package utils;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Queue;
 import java.util.LinkedList;
-
-import jade.core.AID;
-import jade.domain.FIPAAgentManagement.AMSAgentDescription;
-import jade.core.Agent;
-import jade.core.behaviours.*;
-import jade.lang.acl.ACLMessage;
-
-import java.util.Random;
 
 @SuppressWarnings("serial")
 public class PlaneComp
@@ -31,11 +22,26 @@ public class PlaneComp
 	 * Predicted Flight Time Left (minutes)
 	 */
 	private int timeLeft = (int)((double)(fuelLeft/fuelLoss)/speed*60);
+	/**
+	 * Maximum delay allowed is 5 times the current estimated flight time
+	 */
 	private int maxDelay = 5*timeLeft;
+	/**
+	 * Money available to spend
+	 */
 	private int moneyAvailable = 50;
 	private int bid=10;
+	/**
+	 * Current flight route
+	 */
 	private Queue<String> route = new LinkedList<>(){{add("DUL");add("DUL");add("DUL");}};
+	/**
+	 * Current position coordinates
+	 */
 	private HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 3);put("y", 3);}};
+	/**
+	 * Destiny position coordinates
+	 */
 	private HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	/**
 	 * Current Distance Left (km)

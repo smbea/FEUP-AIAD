@@ -1,12 +1,15 @@
 package protocols;
 
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
 import java.util.Vector;
+import java.util.Date;
 import java.util.Enumeration;
 
+@SuppressWarnings("serial")
 public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	private Agent agent;
 	private ACLMessage cfp;
@@ -16,6 +19,10 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		super(a, cfp);
 		this.agent = a;
 		this.cfp = cfp;
+		
+		this.cfp.setContent("Agent " + agent.getLocalName() + " is active! Request proposals");
+	
+		System.out.println(this.cfp.getContent());
 	}
 	
 	public int getNumberResponders() {
@@ -27,7 +34,9 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	}
 	
 	public Vector prepareCfps(ACLMessage cfp) {
-		return super.prepareCfps(cfp);
+		Vector v = new Vector(1);
+		v.addElement(this.cfp);
+		return v;
 	}
 
 	protected void handlePropose(ACLMessage propose, Vector v) {

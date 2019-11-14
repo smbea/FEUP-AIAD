@@ -1,19 +1,14 @@
 package utils;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Queue;
 import java.util.LinkedList;
-import java.util.List;
-
-import jade.core.AID;
-import jade.domain.FIPAAgentManagement.AMSAgentDescription;
-import jade.core.Agent;
-import jade.core.behaviours.*;
-import jade.lang.acl.ACLMessage;
 
 @SuppressWarnings("serial")
 public class PlaneCoop 
-{     
+{   
+	/**
+	 * Fuel Left (liters)
+	 */
 	private int fuelLeft = 50;
 	/**
 	 * Plane average speed of 100 km/h (kilometers per hour)
@@ -29,10 +24,25 @@ public class PlaneCoop
 	private int timeLeft = (int)((double)(fuelLeft/fuelLoss)/speed*60);
 	private int bid=10;
 	int minAcceptBid=15;
+	/**
+	 * Maximum delay allowed is 2 times the current estimated flight time
+	 */
 	int maxDelay = 2*timeLeft;
+	/**
+	 * Money available to spend
+	 */
 	private int moneyAvailable = 30;
+	/**
+	 * Current flight route
+	 */
 	private Queue<String> route = new LinkedList<>(){{add("DDR");add("DDR");add("DDR");add("DDR");}};
+	/**
+	 * Current position coordinates
+	 */
 	private HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
+	/**
+	 * Destiny position coordinates
+	 */
 	private HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 4);put("y", 4);}};
 	/**
 	 * Current Distance Left (km)
