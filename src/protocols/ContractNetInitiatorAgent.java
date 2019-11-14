@@ -20,7 +20,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		this.agent = a;
 		this.cfp = cfp;
 		
-		this.cfp.setContent("Agent " + agent.getLocalName() + " is active! Request proposals");
+		this.cfp.setContent("Start: Agent " + agent.getLocalName() + " is requesting proposals");
 	
 		System.out.println(this.cfp.getContent());
 	}

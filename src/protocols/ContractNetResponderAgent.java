@@ -1,5 +1,6 @@
 package protocols;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Random;
 
@@ -11,6 +12,7 @@ import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.FailureException;
 import utils.Util;
+import agents.Plane;
 
 @SuppressWarnings("serial")
 public class ContractNetResponderAgent extends ContractNetResponder {
@@ -33,13 +35,21 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 		System.out.println("Agent " + agent.getLocalName() + ": CFP received from " + cfp.getSender().getName()
 				+ ". Action is '" + cfp.getContent() + "'");
-		int proposal = Util.evaluateAction();
-		if (proposal > 2) {
-			// We provide a proposal
-			System.out.println("Agent " + agent.getLocalName() + ": Proposing " + proposal);
+		int proposalCode = Util.evaluateAction(cfp.getContent());
+		if (proposalCode == 1) {
+			// We provide a request to move
+			String proposal = "Agent " + agent.getLocalName() + ": Proposing move to [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "]";
+			System.out.println(proposal);
 			ACLMessage propose = cfp.createReply();
 			propose.setPerformative(ACLMessage.PROPOSE);
-			propose.setContent(String.valueOf(proposal));
+			propose.setContent(proposal);
+			return propose;
+		} else if (proposalCode > 2) {
+			// We provide a proposal
+			System.out.println("Agent " + agent.getLocalName() + ": Proposing " + proposalCode);
+			ACLMessage propose = cfp.createReply();
+			propose.setPerformative(ACLMessage.PROPOSE);
+			propose.setContent(String.valueOf(proposalCode));
 			return propose;
 		} else {
 			// We refuse to provide a proposal

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Queue;
-import java.util.Random;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
@@ -48,12 +47,12 @@ public class Plane extends Agent {
 	boolean finished = false;
 	boolean comm = false;
 	boolean negot = false;
-	String conflictPlane = "none";
+	public String conflictPlane = "none";
 	String cidBase;
 	String method;
 	protected static int cidCnt = 0;
 	Queue<String> route = new LinkedList<>();
-	HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
+	private HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
 	String[][] traffic = new String[5][5];
 	AMSAgentDescription[] agents = null;
@@ -74,7 +73,7 @@ public class Plane extends Agent {
 		name = getLocalName();
 		method = (String) args[0];
 
-		if (name.equals("Coop")) {
+		if (name.equals("PlaneCoop")) {
 			PlaneCoop plane = new PlaneCoop();
 			actualPos = plane.getActualPos();
 			finalPos = plane.getFinalPos();
@@ -87,7 +86,7 @@ public class Plane extends Agent {
 			speed = plane.getSpeed();
 			moneyAvailable = plane.getMoneyAvailable();
 			maxDelay = plane.getMaxDelay();
-		} else if (name.equals("Comp")) {
+		} else if (name.equals("PlaneComp")) {
 			PlaneComp plane = new PlaneComp();
 			actualPos = plane.getActualPos();
 			finalPos = plane.getFinalPos();
@@ -239,7 +238,7 @@ public class Plane extends Agent {
 			@Override
 			protected void onTick() {
 
-				if (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
+				if (getActualPos().get("x") == finalPos.get("x") && getActualPos().get("y") == finalPos.get("y")) {
 					System.out.println("I " + name + " arrived at destiny");
 					finished = true;
 					stop();
@@ -248,7 +247,7 @@ public class Plane extends Agent {
 				if (!finished) {
 					try {
 						ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-						msg.setContent("traffic " + actualPos.get("x") + " " + actualPos.get("y"));
+						msg.setContent("traffic " + getActualPos().get("x") + " " + getActualPos().get("y"));
 						msg.addReceiver(getAID("control"));
 						send(msg);
 					} catch (Exception e) {
@@ -260,7 +259,7 @@ public class Plane extends Agent {
 					String s = answer.getContent();
 					traffic = Util.refactorTrafficArray(s);
 
-					Util.checkConflict(actualPos, traffic, name);
+					Util.checkConflict(getActualPos(), traffic, name);
 
 					if (Util.getConflicts().containsKey(name)) {
 						conflictPlane = Util.getConflicts().get(name);
@@ -270,7 +269,7 @@ public class Plane extends Agent {
 					if (!negot) {
 						if (conflictPlane.equals("none")) {
 							System.out.println("Plane " + name + " ready to move");
-							Util.move(route, actualPos, distanceLeft);
+							Util.move(route, getActualPos(), distanceLeft);
 						} else {
 							negot = true;
 						}
@@ -361,7 +360,7 @@ public class Plane extends Agent {
 		MessageTemplate template = MessageTemplate.and(
 				MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
 				MessageTemplate.MatchPerformative(ACLMessage.CFP));
-		
+
 		addBehaviour(new ContractNetResponderAgent(this, template));
 		
 		/*
@@ -469,7 +468,7 @@ public class Plane extends Agent {
 
 	protected void setup() {
 		argCreation();
-
+		
 		if (method.equals("descentralized")) {
 			descentralizedBehaviour();
 		} else if (method.equals("centralized")) {
@@ -477,5 +476,13 @@ public class Plane extends Agent {
 			// behaviour
 			centralizedBehaviour();
 		}
+	}
+
+	public HashMap<String, Integer> getActualPos() {
+		return actualPos;
+	}
+
+	public void setActualPos(HashMap<String, Integer> actualPos) {
+		this.actualPos = actualPos;
 	}
 }
