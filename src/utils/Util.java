@@ -99,7 +99,6 @@ public class Util
 			}
 			System.out.println();
 		}
-		System.out.println();
 	}
 	
 	public static boolean checkConflict(HashMap<String, Integer> actualPos, String[][] traffic, String name) {

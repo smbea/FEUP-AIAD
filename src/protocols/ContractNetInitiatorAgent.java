@@ -82,6 +82,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		Enumeration e = responses.elements();
 		while (e.hasMoreElements()) {
 			ACLMessage msg = (ACLMessage) e.nextElement();
+			
 			if (msg.getPerformative() == ACLMessage.PROPOSE) {
 				String msgContent = msg.getContent();
 
@@ -107,6 +108,8 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 						System.out.println("Accepting proposal '" + msgContent + "' from responder " + msg.getSender().getLocalName());
 					}
 				} else {
+					System.out.println("Agent " + agent.getLocalName() + " detected a conflict!");
+					/*
 					ACLMessage reply = msg.createReply();
 					reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 					acceptances.addElement(reply);
@@ -116,6 +119,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 						bestProposer = msg.getSender();
 						accept = reply;
 					}
+					*/
 				}
 			}
 		}
@@ -125,13 +129,14 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 			accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 		}
 		
+		System.out.println("new iteration");
+		// VETOR
 		newIteration(acceptances);
 	}
 
 	protected void handleInform(ACLMessage inform) {
 		String informContent = inform.getContent();
 		System.out.println("Agent " + inform.getSender().getName() + " successfully performed the requested action");
-		System.out.println(inform.getContent());
 		
 		int index = informContent.indexOf("[");
 		int finalIndex = informContent.indexOf("]");

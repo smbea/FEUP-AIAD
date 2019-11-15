@@ -38,11 +38,11 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		int proposalCode = Util.evaluateAction(cfp.getContent());
 		if (proposalCode == 1) {
 			// We provide a request to move
-			String proposal = "Agent " + agent.getLocalName() + ": Proposing move from [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "]";
-			System.out.println(proposal);
+			String proposal = "Agent " + agent.getLocalName() + ": Proposing move from [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "] according to route";
 			ACLMessage propose = cfp.createReply();
 			propose.setPerformative(ACLMessage.PROPOSE);
 			propose.setContent(proposal);
+			System.out.println(proposal);
 			return propose;
 		} else if (proposalCode > 2) {
 			// We provide a proposal
