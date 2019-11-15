@@ -362,7 +362,7 @@ public class Plane extends Agent {
 				MessageTemplate.MatchPerformative(ACLMessage.CFP));
 
 		addBehaviour(new ContractNetResponderAgent(this, template));
-		
+			
 		/*
 		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
 
@@ -481,8 +481,24 @@ public class Plane extends Agent {
 	public HashMap<String, Integer> getActualPos() {
 		return actualPos;
 	}
+	
+	public int getDistanceLeft() {
+		return distanceLeft;
+	}
+	
+	public Queue<String> getRoute() {
+		return route;
+	}
 
 	public void setActualPos(HashMap<String, Integer> actualPos) {
 		this.actualPos = actualPos;
+	}
+	
+	public void setDistanceLeft(int distanceLeft) {
+		this.distanceLeft = distanceLeft;
+	}
+	
+	public void setRoute(Queue<String> route) {
+		this.route = route;
 	}
 }

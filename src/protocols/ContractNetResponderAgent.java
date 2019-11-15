@@ -1,5 +1,6 @@
 package protocols;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Random;
 
@@ -61,7 +62,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept)
 			throws FailureException {
 		System.out.println("Agent " + agent.getLocalName() + ": Proposal accepted");
-		if (performAction()) {
+		
+		if (performAction(propose.getContent())) {
 			System.out.println("Agent " + agent.getLocalName() + ": Action successfully performed");
 			ACLMessage inform = accept.createReply();
 			inform.setPerformative(ACLMessage.INFORM);
@@ -76,9 +78,12 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		System.out.println("Agent " + agent.getLocalName() + ": Proposal rejected");
 	}
 
-	private boolean performAction() {
+	private boolean performAction(String msg) {
 		// Simulate action execution by generating a random number
-		return (Math.random() > 0.2);
+		//return (Math.random() > 0.2);
+		Util.move(((Plane)agent).getRoute(), ((Plane)agent).getActualPos(), ((Plane)agent).getDistanceLeft());
+		
+		return true;
 	}
 	
 	/**

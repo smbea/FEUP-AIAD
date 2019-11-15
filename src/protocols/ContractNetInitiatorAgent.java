@@ -2,6 +2,7 @@ package protocols;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.FIPANames;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
@@ -124,5 +125,6 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 
 	protected void handleInform(ACLMessage inform) {
 		System.out.println("Agent " + inform.getSender().getName() + " successfully performed the requested action");
+		reset();
 	}
 }

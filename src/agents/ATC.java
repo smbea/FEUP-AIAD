@@ -7,6 +7,7 @@ import java.util.HashMap;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.AMSService;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
