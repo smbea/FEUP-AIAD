@@ -99,7 +99,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 					} else {
 						ACLMessage reply = msg.createReply();
 						reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-						accept = reply;
+						acceptances.addElement(reply);
 						System.out.println("Accepting proposal '" + msgContent + "' from responder " + msg.getSender().getLocalName());
 					}
 				} else {
