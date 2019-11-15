@@ -30,21 +30,12 @@ public class ATC extends Agent {
      	String[] splitInfo = s.split(" ");
      	method = splitInfo[splitInfo.length - 1];
      	
-     	for (int i = 0; i < getTraffic().length; i++) {
-     		Arrays.fill(getTraffic()[i], "null");
+     	for (int i = 0; i < traffic.length; i++) {
+     		Arrays.fill(traffic[i], "null");
      	}
      	
      	for (int i = 0; i < splitInfo.length - 1; i=i+3) {
-			getTraffic()[Integer.parseInt(splitInfo[i+1])][Integer.parseInt(splitInfo[i+2])] = (String) splitInfo[i];
-		}
-	}
-	
-	protected void printTraffic() {
-		for (int i = 0; i < getTraffic().length; i++) {
-			for (int j = 0; j < getTraffic()[i].length; j++) {
-				System.out.print(getTraffic()[i][j] + " ");
-			}
-			System.out.println();
+			traffic[Integer.parseInt(splitInfo[i+1])][Integer.parseInt(splitInfo[i+2])] = (String) splitInfo[i];
 		}
 	}
 	
@@ -155,19 +146,19 @@ public class ATC extends Agent {
 						
 						String[] splitMsg = content.split(" ");
 						
-						for (int i = 0; i < getTraffic().length; i++) {
-							for (int j = 0; j < getTraffic()[i].length; j++) {
-								if(getTraffic()[i][j] != null) {
-									if(getTraffic()[i][j].equals(msg.getSender().getLocalName())) {
-										getTraffic()[i][j] = null;
+						for (int i = 0; i < traffic.length; i++) {
+							for (int j = 0; j < traffic[i].length; j++) {
+								if(traffic[i][j] != null) {
+									if(traffic[i][j].equals(msg.getSender().getLocalName())) {
+										traffic[i][j] = null;
 									}
 								}
 							}
 						}
 						
-						getTraffic()[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[1])] = msg.getSender().getLocalName();
+						traffic[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[1])] = msg.getSender().getLocalName();
 						
-						String trafficS = Arrays.deepToString(getTraffic());
+						String trafficS = Arrays.deepToString(traffic);
 						
 						reply.setContent(trafficS);
 						reply.addReceiver(msg.getSender());
@@ -181,6 +172,20 @@ public class ATC extends Agent {
 
 			
 		});
+	}
+	
+	public void updateMap(String responderName, int posX, int posY) {
+		for (int i = 0; i < traffic.length; i++) {
+			for (int j = 0; j < traffic[i].length; j++) {
+				if(traffic[i][j] != "null") {
+					if(traffic[i][j].equals(responderName)) {
+						traffic[i][j] = "null";
+					}
+				}
+			}
+		}
+		
+		traffic[posX][posY] = responderName;
 	}
 	
 	@SuppressWarnings("deprecation")

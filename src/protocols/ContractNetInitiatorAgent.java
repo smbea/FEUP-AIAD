@@ -11,6 +11,7 @@ import utils.Util;
 import java.util.Vector;
 
 import agents.ATC;
+import agents.Plane;
 
 import java.util.Date;
 import java.util.Enumeration;
@@ -46,7 +47,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		return v;
 	}
 
-	protected void handlePropose(ACLMessage propose, Vector v) {
+	protected void handlePropose(ACLMessage propose) {
 		System.out.println("Agent " + propose.getSender().getName() + " proposed '" + propose.getContent() + "'");
 	}
 
@@ -71,6 +72,8 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 			// Some responder didn't reply within the specified timeout
 			System.out.println("Timeout expired: missing " + (nResponders - responses.size()) + " responses");
 		}
+		
+		Util.printTraffic(((ATC)agent).getTraffic());
 
 		// Evaluate proposals.
 		int bestProposal = -1;
@@ -92,7 +95,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 					planePos.put("x", Integer.parseInt(coord[0]));
 					planePos.put("y", Integer.parseInt(coord[1]));
 
-					if (Util.checkConflict(planePos, ((ATC) agent).getTraffic(), msg.getSender().getLocalName())) {
+					if (Util.checkConflict(planePos, ((ATC)agent).getTraffic(), msg.getSender().getLocalName())) {
 						ACLMessage reply = msg.createReply();
 						reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 						reply.setContent("Agent " + agent.getLocalName() + ": Conflict detected");
@@ -121,10 +124,22 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 			System.out.println("Accepting proposal " + bestProposal + " from responder " + bestProposer.getName());
 			accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 		}
+		
+		newIteration(acceptances);
 	}
 
 	protected void handleInform(ACLMessage inform) {
+		String informContent = inform.getContent();
 		System.out.println("Agent " + inform.getSender().getName() + " successfully performed the requested action");
-		reset();
+		System.out.println(inform.getContent());
+		
+		int index = informContent.indexOf("[");
+		int finalIndex = informContent.indexOf("]");
+		String[] coord = informContent.substring(index + 1, finalIndex).split(", ");
+		
+		((ATC)agent).updateMap(inform.getSender().getLocalName(), Integer.parseInt(coord[0]), Integer.parseInt(coord[1]));
 	}
+	
+	
+
 }

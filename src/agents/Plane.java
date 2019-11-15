@@ -58,6 +58,8 @@ public class Plane extends Agent {
 	AMSAgentDescription[] agents = null;
 	AID myID;
 	int maxDelay;
+	HashMap<String, Integer> moveToPos = new HashMap<String, Integer>();
+	
 	/**
 	 * Numerical value that is attached to a particular attribute's level. A higher
 	 * value is generally related to more attractiveness.
@@ -73,7 +75,7 @@ public class Plane extends Agent {
 		name = getLocalName();
 		method = (String) args[0];
 
-		if (name.equals("PlaneCoop")) {
+		if (name.equals("Coop")) {
 			PlaneCoop plane = new PlaneCoop();
 			actualPos = plane.getActualPos();
 			finalPos = plane.getFinalPos();
@@ -86,7 +88,7 @@ public class Plane extends Agent {
 			speed = plane.getSpeed();
 			moneyAvailable = plane.getMoneyAvailable();
 			maxDelay = plane.getMaxDelay();
-		} else if (name.equals("PlaneComp")) {
+		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
 			actualPos = plane.getActualPos();
 			finalPos = plane.getFinalPos();

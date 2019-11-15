@@ -64,9 +64,10 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		System.out.println("Agent " + agent.getLocalName() + ": Proposal accepted");
 		
 		if (performAction(propose.getContent())) {
-			System.out.println("Agent " + agent.getLocalName() + ": Action successfully performed");
 			ACLMessage inform = accept.createReply();
 			inform.setPerformative(ACLMessage.INFORM);
+			inform.setContent("Agent " + agent.getLocalName() + ": Action 'Move to [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "]' successfully performed");
+			System.out.println(inform.getContent());
 			return inform;
 		} else {
 			System.out.println("Agent " + agent.getLocalName() + ": Action execution failed");
@@ -82,7 +83,6 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		// Simulate action execution by generating a random number
 		//return (Math.random() > 0.2);
 		Util.move(((Plane)agent).getRoute(), ((Plane)agent).getActualPos(), ((Plane)agent).getDistanceLeft());
-		
 		return true;
 	}
 	

@@ -91,8 +91,8 @@ public class Util
         return tempResult.toArray(new String[tempResult.size()][]);        
 	}
 	
-	static void printTraffic(String[][] traffic) {
-		System.out.println();
+	public static void printTraffic(String[][] traffic) {
+		System.out.println("Current Map State");
 		for (int i = 0; i < traffic.length; i++) {
 			for (int j = 0; j < traffic[i].length; j++) {
 				System.out.print(traffic[i][j] + " ");
@@ -106,9 +106,6 @@ public class Util
 		int actX = actualPos.get("x");
 		int actY = actualPos.get("y");
 		int size = traffic.length;
-		
-		System.out.println("Map:");
-		printTraffic(traffic);
 		
 		//check DDR
 		if(actX + 1 < size && actY + 1 < size) {
