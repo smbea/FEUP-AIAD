@@ -102,22 +102,20 @@ public class Util
 		System.out.println();
 	}
 	
-	public static String checkConflict(HashMap<String, Integer> actualPos, String[][] traffic, String name) {
+	public static boolean checkConflict(HashMap<String, Integer> actualPos, String[][] traffic, String name) {
 		int actX = actualPos.get("x");
 		int actY = actualPos.get("y");
 		int size = traffic.length;
 		
-		System.out.println("check " + actX + " " + actY + " , size = " + size);
-		
+		System.out.println("Map:");
 		printTraffic(traffic);
 		
 		//check DDR
 		if(actX + 1 < size && actY + 1 < size) {
-			System.out.println("xy " + traffic[actX+1][actY+1]);
 			if(!traffic[actX + 1][actY + 1].equals("null")) {
-				getConflicts().put(name, traffic[actX + 1][actY + 1]);
-				getConflicts().put(traffic[actX + 1][actY + 1], name);
-				return traffic[actX + 1][actY + 1];
+				conflicts.put(name, traffic[actX + 1][actY + 1]);
+				conflicts.put(traffic[actX + 1][actY + 1], name);
+				return true;
 			}
 		}
 	
@@ -125,67 +123,67 @@ public class Util
 		//check DDL
 		if(actX + 1 < size && actY - 1 >= 0) {
 			if(!traffic[actX + 1][actY - 1].equals("null")) {
-				getConflicts().put(name, traffic[actX + 1][actY - 1]);
-				getConflicts().put(traffic[actX + 1][actY - 1], name);
-				return traffic[actX + 1][actY - 1];
+				conflicts.put(name, traffic[actX + 1][actY - 1]);
+				conflicts.put(traffic[actX + 1][actY - 1], name);
+				return true;
 			}
 		}
 		
 		//check DUL
 		if(actX - 1 >= 0 && actY - 1 >= 0) {
 			if(!traffic[actX - 1][actY - 1].equals("null")) {
-				getConflicts().put(name, traffic[actX - 1][actY - 1]);
-				getConflicts().put(traffic[actX - 1][actY - 1], name);
-				return traffic[actX - 1][actY - 1];
+				conflicts.put(name, traffic[actX - 1][actY - 1]);
+				conflicts.put(traffic[actX - 1][actY - 1], name);
+				return true;
 			}
 		}
 		
 		//check DUR
 		if(actX - 1 >= 0 && actY + 1 < size) {
 			if(!traffic[actX - 1][actY + 1].equals("null")) {
-				getConflicts().put(name, traffic[actX - 1][actY + 1]);
-				getConflicts().put(traffic[actX - 1][actY + 1], name);
-				return traffic[actX - 1][actY + 1];
+				conflicts.put(name, traffic[actX - 1][actY + 1]);
+				conflicts.put(traffic[actX - 1][actY + 1], name);
+				return true;
 			}
 		}
 		
 		//check U
 		if(actX - 1 >= 0) {
 			if(!traffic[actX - 1][actY].equals("null")) {
-				getConflicts().put(name, traffic[actX - 1][actY]);
-				getConflicts().put(traffic[actX - 1][actY], name);
-				return traffic[actX - 1][actY];
+				conflicts.put(name, traffic[actX - 1][actY]);
+				conflicts.put(traffic[actX - 1][actY], name);
+				return true;
 			}
 		}
 		
 		//check D
 		if(actX + 1 < size) {
 			if(!traffic[actX + 1][actY].equals("null")) {
-				getConflicts().put(name, traffic[actX + 1][actY]);
-				getConflicts().put(traffic[actX + 1][actY], name);
-				return traffic[actX + 1][actY];
+				conflicts.put(name, traffic[actX + 1][actY]);
+				conflicts.put(traffic[actX + 1][actY], name);
+				return true;
 			}
 		}
 		
 		//check R
 		if(actY + 1 < size) {
 			if(!traffic[actX][actY + 1].equals("null")) {
-				getConflicts().put(name, traffic[actX][actY + 1]);
-				getConflicts().put(traffic[actX][actY + 1], name);
-				return traffic[actX][actY + 1];
+				conflicts.put(name, traffic[actX][actY + 1]);
+				conflicts.put(traffic[actX][actY + 1], name);
+				return true;
 			}
 		}
 		
 		//check L
 		if(actY - 1 >= 0) {
 			if(!traffic[actX][actY - 1].equals("null")) {
-				getConflicts().put(name, traffic[actX][actY - 1]);
-				getConflicts().put(traffic[actX][actY - 1], name);
-				return traffic[actX][actY - 1];
+				conflicts.put(name, traffic[actX][actY - 1]);
+				conflicts.put(traffic[actX][actY - 1], name);
+				return true;
 			}
 		}
 		
-		return "none";
+		return false;
 	}
 
 	public static int getMovementCost() {

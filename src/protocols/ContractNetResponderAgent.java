@@ -1,6 +1,5 @@
 package protocols;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Random;
 
@@ -38,7 +37,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		int proposalCode = Util.evaluateAction(cfp.getContent());
 		if (proposalCode == 1) {
 			// We provide a request to move
-			String proposal = "Agent " + agent.getLocalName() + ": Proposing move to [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "]";
+			String proposal = "Agent " + agent.getLocalName() + ": Proposing move from [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "]";
 			System.out.println(proposal);
 			ACLMessage propose = cfp.createReply();
 			propose.setPerformative(ACLMessage.PROPOSE);

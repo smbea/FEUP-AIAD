@@ -29,19 +29,19 @@ public class ATC extends Agent {
      	String[] splitInfo = s.split(" ");
      	method = splitInfo[splitInfo.length - 1];
      	
-     	for (int i = 0; i < traffic.length; i++) {
-     		Arrays.fill(traffic[i], "null");
+     	for (int i = 0; i < getTraffic().length; i++) {
+     		Arrays.fill(getTraffic()[i], "null");
      	}
      	
      	for (int i = 0; i < splitInfo.length - 1; i=i+3) {
-			traffic[Integer.parseInt(splitInfo[i+1])][Integer.parseInt(splitInfo[i+2])] = (String) splitInfo[i];
+			getTraffic()[Integer.parseInt(splitInfo[i+1])][Integer.parseInt(splitInfo[i+2])] = (String) splitInfo[i];
 		}
 	}
 	
 	protected void printTraffic() {
-		for (int i = 0; i < traffic.length; i++) {
-			for (int j = 0; j < traffic[i].length; j++) {
-				System.out.print(traffic[i][j] + " ");
+		for (int i = 0; i < getTraffic().length; i++) {
+			for (int j = 0; j < getTraffic()[i].length; j++) {
+				System.out.print(getTraffic()[i][j] + " ");
 			}
 			System.out.println();
 		}
@@ -50,7 +50,7 @@ public class ATC extends Agent {
 	protected void centralizedBehaviour() {
 		ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 		cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-		cfp.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+		cfp.setReplyByDate(new Date(System.currentTimeMillis() + 1000));
 		for (int i = 0; i < agents.length; i++) {
 			 AID agentID = agents[i].getName();
 			if (!agentID.getName().equals(this.getName())) {
@@ -154,19 +154,19 @@ public class ATC extends Agent {
 						
 						String[] splitMsg = content.split(" ");
 						
-						for (int i = 0; i < traffic.length; i++) {
-							for (int j = 0; j < traffic[i].length; j++) {
-								if(traffic[i][j] != null) {
-									if(traffic[i][j].equals(msg.getSender().getLocalName())) {
-										traffic[i][j] = null;
+						for (int i = 0; i < getTraffic().length; i++) {
+							for (int j = 0; j < getTraffic()[i].length; j++) {
+								if(getTraffic()[i][j] != null) {
+									if(getTraffic()[i][j].equals(msg.getSender().getLocalName())) {
+										getTraffic()[i][j] = null;
 									}
 								}
 							}
 						}
 						
-						traffic[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[1])] = msg.getSender().getLocalName();
+						getTraffic()[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[1])] = msg.getSender().getLocalName();
 						
-						String trafficS = Arrays.deepToString(traffic);
+						String trafficS = Arrays.deepToString(getTraffic());
 						
 						reply.setContent(trafficS);
 						reply.addReceiver(msg.getSender());
@@ -204,4 +204,12 @@ public class ATC extends Agent {
     		centralizedBehaviour();
     	}
     }
+
+	public String[][] getTraffic() {
+		return traffic;
+	}
+
+	public void setTraffic(String[][] traffic) {
+		this.traffic = traffic;
+	}
 }
