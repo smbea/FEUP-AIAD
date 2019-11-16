@@ -15,6 +15,8 @@ import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import protocols.ContractNetResponderAgent;
+import utils.PlaneComp;
+import utils.PlaneCoop;
 import utils.Util;
 
 @SuppressWarnings("serial")
@@ -145,7 +147,7 @@ public class Plane extends Agent {
 
 	/**
 	 * 
-	 * @param negotiationAttr
+	 * @param action
 	 * @return
 	 */
 	protected double calcDealCost(HashMap<Integer, Double> action) {
@@ -167,10 +169,10 @@ public class Plane extends Agent {
 
 		for (String proposal : proposals) {
 			cost = utility;
-			int index;
-			int paidMoney;
-			if ((index = proposal.indexOf("Payment")) != -1) {
-				paidMoney = Integer.parseInt(proposal.substring(index + 16));
+
+			if (proposal.contains("Payment")) {
+				int paymentIndex = proposal.lastIndexOf(' ')+1;
+				int paidMoney = Integer.parseInt(proposal.substring(paymentIndex));
 				tempMoney -= paidMoney;
 			}
 
@@ -219,9 +221,9 @@ public class Plane extends Agent {
 			proposals.add(proposal);
 		}
 
-		for (int i = 0; i < proposals.size(); i++) {
+		/*for (int i = 0; i < proposals.size(); i++) {
 			System.out.println(proposals.get(i));
-		}
+		}*/
 
 		return proposals;
 	}
@@ -378,9 +380,14 @@ public class Plane extends Agent {
 				answer = blockingReceive();
 				String s = answer.getContent();
 
+				ArrayList<String> proposals = createActionMessages();
+				evaluateActions(proposals);
+
+
 				if (s.contentEquals("Conflict")) {
 					conflict = true;
 					System.out.println("Conflict detected! Agent " + getAgent().getLocalName() + " is starting negotiations...");
+
 					MessageTemplate template = MessageTemplate.and(
 							MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
 							MessageTemplate.MatchPerformative(ACLMessage.CFP));
