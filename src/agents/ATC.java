@@ -1,18 +1,26 @@
 package agents;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.AMSService;
 import jade.domain.FIPANames;
+import jade.domain.FIPAAgentManagement.AMSAgentDescription;
+import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
+import protocols.ContractNetInitiatorAgent;
+import utils.Util;
 
 @SuppressWarnings("serial")
 public class ATC extends Agent {
 	String[][] traffic = new String[5][5];
 	boolean comm = false;
 	String method;
+	private AMSAgentDescription [] agents = null;
 	
 	protected void createTraffic() {
 		Object[] args = getArguments();
@@ -46,33 +54,45 @@ public class ATC extends Agent {
 				ACLMessage msg = receive();
 				if(msg != null) {
 					String content = msg.getContent();
-					System.out.println("msg = " + content);
 					ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
 					
-					String[] splitMsg = content.split(" ");
 					if(content.contains("Request_Move")) {
-						HashMap<String, Integer> planePos = new HashMap<String, Integer>();
-						planePos.put("x", Integer.parseInt(splitMsg[1]));
-						planePos.put("y", Integer.parseInt(splitMsg[2]));
+						System.out.println("Agent " + msg.getSender().getLocalName() + " proposed '" + content + "'");
+						int index = content.indexOf("[");
+						int finalIndex = content.indexOf("]");
+						String[] coord = content.substring(index + 1, finalIndex).split(", ");
 						
-						System.out.println(planePos);
-						
-						String conflict = Util.checkConflict(planePos, traffic, msg.getSender().getLocalName());
-					// trafficS = Arrays.deepToString(traffic);
-						String message;
-						
-						if (conflict.equals("none")) {
-							message = "Continue";
-							System.out.println("CONTINUE - SAYS ATC");
+						if (!Util.checkConflict(coord, traffic, msg.getSender().getLocalName())) {
+							reply.setContent("Accepting proposal '" + content + "' from responder " + msg.getSender().getLocalName());
+							reply.addReceiver(msg.getSender());
+							send(reply);
 						} else {
-							message = "Conflict";
-							System.out.println("CONFLICT DETECTED IN ATC");
+							ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+							cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+							cfp.setReplyByDate(new Date(System.currentTimeMillis() + 1000));
+							
+							for (int i = 0; i < agents.length; i++) {
+								AID agentID = agents[i].getName();
+								if (!agentID.getName().equals(this.getAgent().getName())) {
+									System.out.println(agentID.getName());
+									cfp.addReceiver(agentID);
+									reply.addReceiver(agentID);
+								}
+							}
+							
+							reply.setContent("Conflict");
+							send(reply);
+							System.out.println("Agent " + getAgent().getLocalName() + ": Conflict detected");
+							block();
+	
+							addBehaviour(new ContractNetInitiatorAgent(this.getAgent(), cfp));
 						}
-						reply.setContent(message);
-						reply.addReceiver(msg.getSender());
-						send(reply);
-						block();
-					} else if(content.contains("Move")) {						
+					} else if(content.contains("Execute_Move")) {	
+						System.out.println("Agent " + msg.getSender().getName() + " successfully performed the requested action");
+						int index = content.indexOf("[");
+						int finalIndex = content.indexOf("]");
+						String[] coord = content.substring(index + 1, finalIndex).split(", ");
+						
 						for (int i = 0; i < traffic.length; i++) {
 							for (int j = 0; j < traffic[i].length; j++) {
 								if(traffic[i][j] != "null") {
@@ -83,21 +103,9 @@ public class ATC extends Agent {
 							}
 						}
 						
-						traffic[Integer.parseInt(splitMsg[1])][Integer.parseInt(splitMsg[1])] = msg.getSender().getLocalName();
-						
-						System.out.println("Updated grid!");
-						
-						String cfpContent = "Get_Proposals";
-						
-						ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-						cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-						cfp.setContent(cfpContent);
-						cfp.addReceiver(msg.getSender());
-						
-						ContractNetInitiatorAgent initiator = new ContractNetInitiatorAgent(this.getAgent(), cfp);
-						
-						initiator.prepareCfps(cfp);
-						initiator.sendMessage();
+						traffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = msg.getSender().getLocalName();
+
+						Util.printTraffic(traffic);
 					}
 					else {
 						System.out.println("Not traffic");
@@ -153,6 +161,13 @@ public class ATC extends Agent {
 	protected void setup() 
     {	
 		createTraffic();
+		
+		 try {
+		        SearchConstraints c = new SearchConstraints();
+		        c.setMaxResults ( new Long(-1) );
+		        agents = AMSService.search( this, new AMSAgentDescription (), c );
+		    }
+		    catch (Exception e) {e.printStackTrace();}
 		
 		if(method.equals("descentralized")){
 			descentralizedBehaviour();

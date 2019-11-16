@@ -1,4 +1,4 @@
-package agents;
+package utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,11 +7,11 @@ import java.util.Queue;
 
 public class Util 
 {       
-	static int movementCost = 200;
+	private static int movementCost = 200;
 	static int fuelConsumptionByMove = 1;
-	static HashMap<String, String> conflicts = new HashMap<String, String>();
-	static String initiator = "null";
-	static String responder = "null";
+	private static HashMap<String, String> conflicts = new HashMap<String, String>();
+	private static String initiator = "null";
+	private static String responder = "null";
 	
 	String genCID(String cidBase, int cidCnt, String name) {
 		if(cidBase == null) {
@@ -20,7 +20,7 @@ public class Util
 		return cidBase + (cidCnt++);
 	}
 	 
-	static void move(Queue<String> route, HashMap<String, Integer> actualPos, int distanceLeft) {
+	public static void move(Queue<String> route, HashMap<String, Integer> actualPos, int distanceLeft) {
 		String nextMove = route.remove();
 		distanceLeft--;
 		switch (nextMove) {
@@ -57,7 +57,7 @@ public class Util
 		}
 	}
 	
-	static String[][] refactorTrafficArray(String trafficS) {
+	public static String[][] refactorTrafficArray(String trafficS) {
 		String[] strings = trafficS.replace("[", "").replace("]", ">").split(", ");
         List<String> stringList = new ArrayList<>();
         List<String[]> tempResult = new ArrayList<>();
@@ -77,7 +77,7 @@ public class Util
         return tempResult.toArray(new String[tempResult.size()][]);        
 	}
 	
-	static void printTraffic(String[][] traffic) {
+	public static void printTraffic(String[][] traffic) {
 		System.out.println();
 		for (int i = 0; i < traffic.length; i++) {
 			for (int j = 0; j < traffic[i].length; j++) {
@@ -88,22 +88,17 @@ public class Util
 		System.out.println();
 	}
 	
-	static String checkConflict(HashMap<String, Integer> actualPos, String[][] traffic, String name) {
-		int actX = actualPos.get("x");
-		int actY = actualPos.get("y");
+	public static boolean checkConflict(String[] actualPos, String[][] traffic, String name) {
+		int actX = Integer.parseInt(actualPos[0]);
+		int actY = Integer.parseInt(actualPos[1]);
 		int size = traffic.length;
-		
-		System.out.println("check " + actX + " " + actY + " , size = " + size);
-		
-		printTraffic(traffic);
 		
 		//check DDR
 		if(actX + 1 < size && actY + 1 < size) {
-			System.out.println("xy " + traffic[actX+1][actY+1]);
 			if(!traffic[actX + 1][actY + 1].equals("null")) {
 				conflicts.put(name, traffic[actX + 1][actY + 1]);
 				conflicts.put(traffic[actX + 1][actY + 1], name);
-				return traffic[actX + 1][actY + 1];
+				return true;
 			}
 		}
 	
@@ -113,7 +108,7 @@ public class Util
 			if(!traffic[actX + 1][actY - 1].equals("null")) {
 				conflicts.put(name, traffic[actX + 1][actY - 1]);
 				conflicts.put(traffic[actX + 1][actY - 1], name);
-				return traffic[actX + 1][actY - 1];
+				return true;
 			}
 		}
 		
@@ -122,7 +117,7 @@ public class Util
 			if(!traffic[actX - 1][actY - 1].equals("null")) {
 				conflicts.put(name, traffic[actX - 1][actY - 1]);
 				conflicts.put(traffic[actX - 1][actY - 1], name);
-				return traffic[actX - 1][actY - 1];
+				return true;
 			}
 		}
 		
@@ -131,7 +126,7 @@ public class Util
 			if(!traffic[actX - 1][actY + 1].equals("null")) {
 				conflicts.put(name, traffic[actX - 1][actY + 1]);
 				conflicts.put(traffic[actX - 1][actY + 1], name);
-				return traffic[actX - 1][actY + 1];
+				return true;
 			}
 		}
 		
@@ -140,7 +135,7 @@ public class Util
 			if(!traffic[actX - 1][actY].equals("null")) {
 				conflicts.put(name, traffic[actX - 1][actY]);
 				conflicts.put(traffic[actX - 1][actY], name);
-				return traffic[actX - 1][actY];
+				return true;
 			}
 		}
 		
@@ -149,7 +144,7 @@ public class Util
 			if(!traffic[actX + 1][actY].equals("null")) {
 				conflicts.put(name, traffic[actX + 1][actY]);
 				conflicts.put(traffic[actX + 1][actY], name);
-				return traffic[actX + 1][actY];
+				return true;
 			}
 		}
 		
@@ -158,7 +153,7 @@ public class Util
 			if(!traffic[actX][actY + 1].equals("null")) {
 				conflicts.put(name, traffic[actX][actY + 1]);
 				conflicts.put(traffic[actX][actY + 1], name);
-				return traffic[actX][actY + 1];
+				return true;
 			}
 		}
 		
@@ -167,10 +162,42 @@ public class Util
 			if(!traffic[actX][actY - 1].equals("null")) {
 				conflicts.put(name, traffic[actX][actY - 1]);
 				conflicts.put(traffic[actX][actY - 1], name);
-				return traffic[actX][actY - 1];
+				return true;
 			}
 		}
 		
-		return "none";
+		return false;
+	}
+
+	public static HashMap<String, String> getConflicts() {
+		return conflicts;
+	}
+
+	public static void setConflicts(HashMap<String, String> conflicts) {
+		Util.conflicts = conflicts;
+	}
+
+	public static int getMovementCost() {
+		return movementCost;
+	}
+
+	public static void setMovementCost(int movementCost) {
+		Util.movementCost = movementCost;
+	}
+
+	public static String getInitiator() {
+		return initiator;
+	}
+
+	public static void setInitiator(String initiator) {
+		Util.initiator = initiator;
+	}
+
+	public static String getResponder() {
+		return responder;
+	}
+
+	public static void setResponder(String responder) {
+		Util.responder = responder;
 	}
 } 
