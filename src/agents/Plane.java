@@ -14,9 +14,11 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import protocols.ContractNetInitiatorAgent;
 import protocols.ContractNetResponderAgent;
 import utils.PlaneComp;
 import utils.PlaneCoop;
+import utils.PlanePersonality;
 import utils.Util;
 
 @SuppressWarnings("serial")
@@ -64,45 +66,63 @@ public class Plane extends Agent {
 	 * Numerical value that is attached to a particular attribute's level. A higher
 	 * value is generally related to more attractiveness.
 	 */
-	LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes;
+	LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes = new LinkedHashMap<>();
 	ContractNetResponderAgent responder;
 
 	/**
 	 * Initialize Plane's Attributes.
 	 */
 	protected void argCreation() {
+		System.out.println("in arg creation");
 		Object[] args = getArguments();
 		name = getLocalName();
 		method = (String) args[0];
 
 		if (name.equals("Coop")) {
 			PlaneCoop plane = new PlaneCoop();
-			actualPos = plane.getActualPos();
-			finalPos = plane.getFinalPos();
-			fuelLeft = plane.getFuelLeft();
-			fuelLoss = plane.getFuelLoss();
-			timeLeft = plane.getTimeLeft();
-			bid = plane.getBid();
-			route = plane.getRoute();
-			distanceLeft = plane.getDistanceLeft();
-			speed = plane.getSpeed();
-			moneyAvailable = plane.getMoneyAvailable();
-			maxDelay = plane.getMaxDelay();
+			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getFuelLoss(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneWeights(plane, plane.getDistanceLeft());
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
-			actualPos = plane.getActualPos();
-			finalPos = plane.getFinalPos();
-			fuelLeft = plane.getFuelLeft();
-			fuelLoss = plane.getFuelLoss();
-			timeLeft = plane.getTimeLeft();
-			bid = plane.getBid();
-			route = plane.getRoute();
-			distanceLeft = plane.getDistanceLeft();
-			speed = plane.getSpeed();
-			moneyAvailable = plane.getMoneyAvailable();
-			maxDelay = plane.getMaxDelay();
+			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getFuelLoss(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneWeights(plane, plane.getDistanceLeft());
+			System.out.println(plane.getRoute());
 		}
 	}
+
+	private void initPlaneArgs(HashMap<String, Integer> actualPos, HashMap<String, Integer> finalPos, int fuelLeft, int fuelLoss, int timeLeft, int bid, Queue<String> route, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
+		this.actualPos = actualPos;
+		this.finalPos = finalPos;
+		this.fuelLeft = fuelLeft;
+		this.fuelLoss = fuelLoss;
+		this.timeLeft = timeLeft;
+		this.bid = bid;
+		this.route = route;
+		this.distanceLeft = distanceLeft;
+		this.speed = speed;
+		this.moneyAvailable = moneyAvailable;
+		this.maxDelay = maxDelay;
+	}
+
+
+	private void initPlaneWeights(PlanePersonality plane, Integer distanceLeft) {
+		System.out.println("in initPlaneWeights");
+
+		LinkedHashMap<Integer, Double> fuelWeights = ContractNetResponderAgent.generateWeight(plane.getFuelLeft(), 0, 1);
+		this.negotiationAttributes.put("fuel", fuelWeights);
+
+		LinkedHashMap<Integer, Double> moneyWeights = ContractNetResponderAgent.generateWeight(plane.getMoneyAvailable(), 0 , 1);
+		this.negotiationAttributes.put("money", moneyWeights);
+
+		LinkedHashMap<Integer, Double> timeWeights = ContractNetResponderAgent.generateWeight(plane.getMaxDelay(), 0 , 1);
+		this.negotiationAttributes.put("time", timeWeights);
+
+		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(distanceLeft, 0 , 1);
+		this.negotiationAttributes.put("detour", detourWeights);
+
+		System.out.println("OUT: " + negotiationAttributes);
+	}
+
 
 	double valueNormalizationFuncion(double value, double min, double max) {
 		return (value - min) / (max - min);
@@ -131,11 +151,6 @@ public class Plane extends Agent {
 			}
 
 			System.out.println("attr = " + attrCriteria.getKey() + " , before print " + sumWeight);
-
-			if (sumWeight != 1.0) {
-				System.out.println("Error: negotiation set attributes' weight does not sum up to one.");
-				return -1;
-			}
 
 			for (Entry<Integer, Double> weight : attrCriteria.getValue().entrySet()) {
 				sumUtil += valueNormalizationFuncion(weight.getKey(), min, max) * weight.getValue();

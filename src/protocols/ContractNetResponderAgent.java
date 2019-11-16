@@ -2,6 +2,7 @@ package protocols;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Random;
 
 import jade.core.Agent;
@@ -83,24 +84,36 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	 * @param maxWeight
 	 * @return
 	 */
-	public LinkedHashMap<Integer, Double> generateWeight(int max, int min, double maxWeight) {
+	public static LinkedHashMap<Integer, Double> generateWeight(int max, int min, double maxWeight) {
 		LinkedHashMap<Integer, Double> weights = new LinkedHashMap<Integer, Double>();
-		
-		weights.put(min, maxWeight);
 
 		Random rand = new Random();
-		double sum = maxWeight;
-		double previousRand = maxWeight;
+		double sum = 0;
+		double previousRand;
 		double actualRand = maxWeight;
-		
-		for(int i = min + 1; i <= max; i++) {
-			while(actualRand >= previousRand || sum + actualRand >= 1) {
-				actualRand = rand.nextDouble();
+
+		for(int i = min; i <= max+1; i++) {
+			previousRand = actualRand;
+
+			if(i == max+1) {
+				System.out.println("i " + i + " sum: " + sum + " left: " + (maxWeight-sum));
+
+				for (Map.Entry<Integer, Double> element: weights.entrySet()){
+					weights.put(min, element.getValue()+(maxWeight-sum));
+					break;
+				}
+
+				break;
 			}
-			sum += actualRand;	
+
+			do {
+				actualRand = 0 + (rand.nextDouble() * (previousRand - 0));
+			} while(sum + actualRand > maxWeight);
+
+			sum += actualRand;
 			weights.put(i, actualRand);
 		}
-			
+
 		return weights;
 	}
 }
