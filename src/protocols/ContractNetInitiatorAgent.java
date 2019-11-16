@@ -96,9 +96,10 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 				}
 			}
 		}
+		
 		// Accept the proposal of the best proposer
 		if (accept != null) {
-			System.out.println("Accepting proposal "+bestProposal+" from responder "+bestProposer.getName());
+			System.out.println("Accepting proposal " + bestProposal + " from responder " + bestProposer.getName());
 			accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 		}		
 	}

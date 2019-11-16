@@ -2,23 +2,19 @@ package agents;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CompositeBehaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.FSMBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.AMSService;
 import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
-import jade.util.leap.Collection;
 import protocols.ContractNetInitiatorAgent;
 import utils.Util;
 
@@ -34,6 +30,7 @@ public class ATC extends Agent {
 		Object[] args = getArguments();
 		String s = (String) args[0];
 		String[] splitInfo = s.split(" ");
+		
 		method = splitInfo[splitInfo.length - 1];
 
 		for (int i = 0; i < traffic.length; i++) {
@@ -43,6 +40,7 @@ public class ATC extends Agent {
 		for (int i = 0; i < splitInfo.length - 1; i = i + 3) {
 			traffic[Integer.parseInt(splitInfo[i + 1])][Integer.parseInt(splitInfo[i + 2])] = (String) splitInfo[i];
 		}
+
 	}
 
 	protected void printTraffic() {
@@ -130,6 +128,7 @@ public class ATC extends Agent {
 							reply.addReceiver(msg.getSender());
 							send(reply);
 						} else {
+							Util.conflict = true;
 							ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
 							reply.setContent("Conflict");
 							for (int i = 0; i < agents.length; i++) {
@@ -139,7 +138,7 @@ public class ATC extends Agent {
 								}
 							}
 							System.out.println("Agent " + getAgent().getLocalName()
-									+ ": Conflict detected! Rejecting proposal with reply: " + reply.getContent());
+									+ ": Conflict detected! Rejecting proposal");
 							send(reply);
 						}
 					} else if (msg.getPerformative() == ACLMessage.INFORM) {
