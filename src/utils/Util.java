@@ -19,20 +19,6 @@ public class Util
 		}
 		return cidBase + (cidCnt++);
 	}
-	
-	/**
-	 * MUDAR!!!!!!!
-	 * @return
-	 */
-	public static int evaluateAction(String action) {
-		// initial cfp
-		if (action.indexOf("Start") != -1) {
-			return 1;
-		} else {
-			// Simulate an evaluation by generating a random number
-			return 3;
-		}
-	}
 	 
 	public static void move(Queue<String> route, HashMap<String, Integer> actualPos, int distanceLeft) {
 		String nextMove = route.remove();
@@ -92,18 +78,19 @@ public class Util
 	}
 	
 	public static void printTraffic(String[][] traffic) {
-		System.out.println("Current Map State");
+		System.out.println();
 		for (int i = 0; i < traffic.length; i++) {
 			for (int j = 0; j < traffic[i].length; j++) {
 				System.out.print(traffic[i][j] + " ");
 			}
 			System.out.println();
 		}
+		System.out.println();
 	}
 	
-	public static boolean checkConflict(HashMap<String, Integer> actualPos, String[][] traffic, String name) {
-		int actX = actualPos.get("x");
-		int actY = actualPos.get("y");
+	public static boolean checkConflict(String[] actualPos, String[][] traffic, String name) {
+		int actX = Integer.parseInt(actualPos[0]);
+		int actY = Integer.parseInt(actualPos[1]);
 		int size = traffic.length;
 		
 		//check DDR
@@ -182,20 +169,20 @@ public class Util
 		return false;
 	}
 
-	public static int getMovementCost() {
-		return movementCost;
-	}
-
-	public static void setMovementCost(int movementCost) {
-		Util.movementCost = movementCost;
-	}
-
 	public static HashMap<String, String> getConflicts() {
 		return conflicts;
 	}
 
 	public static void setConflicts(HashMap<String, String> conflicts) {
 		Util.conflicts = conflicts;
+	}
+
+	public static int getMovementCost() {
+		return movementCost;
+	}
+
+	public static void setMovementCost(int movementCost) {
+		Util.movementCost = movementCost;
 	}
 
 	public static String getInitiator() {

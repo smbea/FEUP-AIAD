@@ -35,16 +35,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 		System.out.println("Agent " + agent.getLocalName() + ": CFP received from " + cfp.getSender().getName()
 				+ ". Action is '" + cfp.getContent() + "'");
-		int proposalCode = Util.evaluateAction(cfp.getContent());
+		int proposalCode = 0;//Util.evaluateAction(cfp.getContent());
 		if (proposalCode == 1) {
-			// We provide a request to move
-			String proposal = "Agent " + agent.getLocalName() + ": Proposing move from [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "] according to route";
-			ACLMessage propose = cfp.createReply();
-			propose.setPerformative(ACLMessage.PROPOSE);
-			propose.setContent(proposal);
-			System.out.println(proposal);
-			return propose;
-		} else if (proposalCode > 2) {
 			// We provide a proposal
 			System.out.println("Agent " + agent.getLocalName() + ": Proposing " + proposalCode);
 			ACLMessage propose = cfp.createReply();
@@ -66,7 +58,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		if (performAction(propose.getContent())) {
 			ACLMessage inform = accept.createReply();
 			inform.setPerformative(ACLMessage.INFORM);
-			inform.setContent("Agent " + agent.getLocalName() + ": Action 'Move to [" + ((Plane)agent).getActualPos().get("x") + ", " + ((Plane)agent).getActualPos().get("y") + "]' successfully performed");
+			inform.setContent("Agent " + agent.getLocalName() + ": Action successfully performed");
 			System.out.println(inform.getContent());
 			return inform;
 		} else {
@@ -81,9 +73,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 
 	private boolean performAction(String msg) {
 		// Simulate action execution by generating a random number
-		//return (Math.random() > 0.2);
-		Util.move(((Plane)agent).getRoute(), ((Plane)agent).getActualPos(), ((Plane)agent).getDistanceLeft());
-		return true;
+		return (Math.random() > 0.2);
 	}
 	
 	/**
