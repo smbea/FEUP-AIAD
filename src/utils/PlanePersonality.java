@@ -48,7 +48,7 @@ public class PlanePersonality {
      */
     HashMap<String, Integer> finalPos;
 
-    private int distanceLeft = getRoute().size();
+    int distanceLeft = getRoute().size();
 
     int bid=10;
 

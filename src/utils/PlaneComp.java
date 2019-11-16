@@ -15,6 +15,7 @@ public class PlaneComp extends PlanePersonality
 
 	public PlaneComp() {
 		this.route = new LinkedList<>(){{add("DUL");add("DUL");add("DUL");}};
+		super.distanceLeft = this.route.size();
 		this.actualPos = new HashMap<String, Integer>(){{put("x", 3);put("y", 3);}};
 		this.finalPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	}
