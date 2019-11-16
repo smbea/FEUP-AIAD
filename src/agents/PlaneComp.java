@@ -9,6 +9,7 @@ import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
+import utils.Util;
 
 @SuppressWarnings("serial")
 public class PlaneComp
@@ -16,7 +17,7 @@ public class PlaneComp
 	/**
 	 * Fuel Left (liters)
 	 */
-	int fuelLeft = 50;
+	int fuelLeft = 5000;
 	/**
 	 * Plane average speed of 100 km/h (kilometers per hour)
 	 */
@@ -25,19 +26,19 @@ public class PlaneComp
 	 * Plane average total fuel loss of 10 L/km (liters per kilometer)
 	 */
 	int fuelLoss = 10;
-	/**
-	 * Predicted Flight Time Left (minutes)
-	 */
-	int timeLeft = 60;
 	int moneyAvailable = 100;
 	int bid=10;
 	Queue<String> route = new LinkedList<>(){{add("DUL");add("DUL");add("DUL");}};
+	/**
+	 * Predicted Flight Time Left (minutes)
+	 */
+	int timeLeft = route.size()*Util.getMovementCost()*60/speed;
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 3);put("y", 3);}};
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	/**
 	 * Current Distance Left (km)
 	 */
-	int distanceLeft = route.size();
+	int distanceLeft = route.size()*Util.getMovementCost();
 	String goal="money";								//money, time, fuel, etc
 	
 	/**

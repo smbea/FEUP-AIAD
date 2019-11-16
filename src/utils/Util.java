@@ -12,7 +12,10 @@ public class Util
 	private static HashMap<String, String> conflicts = new HashMap<String, String>();
 	private static String initiator = "null";
 	private static String responder = "null";
-	
+	public static boolean conflict = false;
+	public static int confirmedConflictCounter = 0;
+	public static int nResponders;
+
 	String genCID(String cidBase, int cidCnt, String name) {
 		if(cidBase == null) {
 			cidBase = name + hashCode() + System.currentTimeMillis()%10000 + "_";

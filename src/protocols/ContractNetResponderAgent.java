@@ -35,7 +35,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 		System.out.println("Agent " + agent.getLocalName() + ": CFP received from " + cfp.getSender().getName()
 				+ ". Action is '" + cfp.getContent() + "'");
-		int proposalCode = 0;//Util.evaluateAction(cfp.getContent());
+		int proposalCode = 1;//Util.evaluateAction(cfp.getContent());
 		if (proposalCode == 1) {
 			// We provide a proposal
 			System.out.println("Agent " + agent.getLocalName() + ": Proposing " + proposalCode);

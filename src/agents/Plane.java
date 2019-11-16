@@ -56,6 +56,8 @@ public class Plane extends Agent
 	AMSAgentDescription [] agents = null;
 	AID myID;
 	HashMap<String, LinkedHashMap<Double, Double>> negotiationAttributes;
+	public boolean conflict = false;
+	boolean firstIterationOver = false;
 	
 	/**
 	 * Initialize Plane's Attributes.
@@ -195,16 +197,20 @@ public class Plane extends Agent
 			cost = utility;
 			int index;
 			int paidMoney;
+			HashMap<String, Integer> result = new HashMap<String, Integer>();
+			
 			if ((index = proposal.indexOf("Propose_Payment")) != -1) {
 				paidMoney = Integer.parseInt(proposal.substring(index + 16));
 				tempMoney -= paidMoney;
+			} else {
+				result.put("detour", distanceLeft + 1);
 			}
 			
-			HashMap<String, Integer> result = new HashMap<String, Integer>();
+			
 			result.put("fuel", fuelLeft-fuelLoss);
 			result.put("money", tempMoney);
-			result.put("time", timeLeft - 1/speed);
-			result.put("detour", distanceLeft + 1);
+			result.put("time", timeLeft - Util.getMovementCost()*60/speed);
+
 			
 			/*cost -= calcDealCost(result);
 			
@@ -373,54 +379,73 @@ public class Plane extends Agent
 	 * Implements Centralized Air Traffic, i.e., planes communicate and negotiate with ATC.
 	 */
 	protected void centralizedBehaviour() {
-		addBehaviour(new SimpleBehaviour() {
-			@Override
-			public void action() {
-				boolean conflict = false;
-				
-				try {
-					ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
-					msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName() + " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y") + "] according to route");
-					msg.addReceiver(getAID("control"));
-					send(msg);
-					System.out.println(msg.getContent());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
-				ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
-				answer = blockingReceive();
-				String s = answer.getContent();
-
-				if (s.contentEquals("Conflict")) {
-					conflict = true;
-					System.out.println("Conflict detected! Agent " + getAgent().getLocalName() + " is starting negotiations...");
-					MessageTemplate template = MessageTemplate.and(
-							MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
-							MessageTemplate.MatchPerformative(ACLMessage.CFP));
-					block();
-					addBehaviour(new ContractNetResponderAgent(this.getAgent(), template));
-				} else {
-					Util.move(route, actualPos, distanceLeft);
-					try  {
-						ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-						msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to [" + actualPos.get("x") + ", " + actualPos.get("y") + "]' successfully performed");
-						msg.addReceiver(getAID("control"));
-						send(msg);
-						System.out.println(msg.getContent());
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					
-				}
-			}
-
+		addBehaviour(new TickerBehaviour(this, (Util.getMovementCost()/speed)*1000) {
 			/**
 			 * Plane arrived at destiny
 			 */
+			public boolean isOver() {
+				//return (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y"));
+				return (Util.confirmedConflictCounter == Util.nResponders);
+			}
+
 			@Override
-			public boolean done() {
-				return (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y"));
+			protected void onTick() {
+				if (!isOver()) {
+					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
+					answer = blockingReceive();
+	
+					System.out.println("answer: " + answer.getContent());
+					
+					if (answer.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
+						System.out.println("Conflict detected! Agent " + getAgent().getLocalName() + " is starting negotiations...");
+						MessageTemplate template = MessageTemplate.and(
+								MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
+								MessageTemplate.MatchPerformative(ACLMessage.CFP));
+
+						Util.confirmedConflictCounter++;
+
+						System.out.println();System.out.println();System.out.println();System.out.println();System.out.println();
+					} else if(answer.getPerformative() == ACLMessage.CFP) {
+						try {
+							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName() + " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y") + "] according to route");
+							msg.addReceiver(getAID("control"));
+							send(msg);
+							System.out.println(msg.getContent());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
+							Util.move(route, actualPos, distanceLeft);
+							try  {
+								ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+								msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to [" + actualPos.get("x") + ", " + actualPos.get("y") + "]' successfully performed");
+								msg.addReceiver(getAID("control"));
+								send(msg);
+								System.out.println(msg.getContent());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+					}
+					
+					block();
+					
+					if (firstIterationOver && !isOver()) {
+						try {
+			
+								ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+								msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName() + " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y") + "] according to route");
+								msg.addReceiver(getAID("control"));
+								send(msg);
+								System.out.println(msg.getContent());
+							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					
+					firstIterationOver = true;
+				}
 			}
 			});
 	}
