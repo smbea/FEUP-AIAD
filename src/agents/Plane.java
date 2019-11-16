@@ -14,6 +14,7 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import javafx.util.Pair;
 import protocols.ContractNetInitiatorAgent;
 import protocols.ContractNetResponderAgent;
 import utils.PlaneComp;
@@ -119,8 +120,6 @@ public class Plane extends Agent {
 
 		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(distanceLeft, 0 , 1);
 		this.negotiationAttributes.put("detour", detourWeights);
-
-		System.out.println("OUT: " + negotiationAttributes);
 	}
 
 
@@ -131,34 +130,35 @@ public class Plane extends Agent {
 	/**
 	 * Multi-attribute utility function to evalute negotiation attributes.
 	 */
-	protected double utilityFunction() {
+	protected double proposalUtility(HashMap<String, Double> proposalWeight, HashMap<String, Double> currentWeights) {
 		double sumUtil = 0;
 		double min = 0, max = 0;
 
-		for (Entry<String, LinkedHashMap<Integer, Double>> attrCriteria : negotiationAttributes.entrySet()) {
+		for (Entry<String, LinkedHashMap<Integer, Double>> attrWeights : negotiationAttributes.entrySet()) {
 			int index = 0;
 			double sumWeight = 0;
 
-			for (Entry<Integer, Double> weight : attrCriteria.getValue().entrySet()) {
+			for (Entry<Integer, Double> valueWeight : attrWeights.getValue().entrySet()) {
 				if (index == 0) {
-					min = weight.getValue();
-				} else if (index == negotiationAttributes.get(attrCriteria.getKey()).size() - 1) {
-					max = weight.getValue();
+					min = valueWeight.getValue();
+				} else if (index == negotiationAttributes.get(attrWeights.getKey()).size() - 1) {
+					max = valueWeight.getValue();
 				}
-				sumWeight += weight.getValue();
-				System.out.println("weight = " + weight.getKey() + " sum = " + sumWeight);
-				System.out.println("size = " + negotiationAttributes.get(attrCriteria.getKey()).size());
+				sumWeight += valueWeight.getValue();
+				//System.out.println("weight = " + valueWeight.getKey() + " sum = " + sumWeight);
+				//System.out.println("size = " + negotiationAttributes.get(attrWeights.getKey()).size());
 			}
 
-			System.out.println("attr = " + attrCriteria.getKey() + " , before print " + sumWeight);
+			//System.out.println("attr = " + attrWeights.getKey() + " , before print " + sumWeight);
 
-			for (Entry<Integer, Double> weight : attrCriteria.getValue().entrySet()) {
+			for (Entry<Integer, Double> weight : attrWeights.getValue().entrySet()) {
 				sumUtil += valueNormalizationFuncion(weight.getKey(), min, max) * weight.getValue();
 			}
 		}
 
 		return sumUtil;
 	}
+
 
 	/**
 	 * 
@@ -176,36 +176,61 @@ public class Plane extends Agent {
 	}
 
 	void evaluateActions(ArrayList<String> proposals) {
-		int tempMoney = moneyAvailable;
-		double utility = utilityFunction();
-		double cost = utility;
-		int maxUtil = 0;
-		String chosenProposal = null;
+
+		HashMap<String, Double> currentWeights = this.calculateCurrentWeights();
+		Pair<String, Double> bestProposal = new Pair<>(null, 0.0);
 
 		for (String proposal : proposals) {
-			cost = utility;
 
-			if (proposal.contains("Payment")) {
-				int paymentIndex = proposal.lastIndexOf(' ')+1;
-				int paidMoney = Integer.parseInt(proposal.substring(paymentIndex));
-				tempMoney -= paidMoney;
-			}
+			HashMap<String, Double> proposalWeights = this.calculateProposalWeights(proposal);
+			double proposalUtility = this.proposalUtility(proposalWeights, currentWeights);
 
-			HashMap<String, Integer> result = new HashMap<String, Integer>();
-			result.put("fuel", fuelLeft - fuelLoss);
-			result.put("money", tempMoney);
-			result.put("time", timeLeft - 1 / speed);
-			result.put("detour", distanceLeft + 1);
-/*
-			cost -= calcDealCost(result);
+			if(bestProposal.getValue() < proposalUtility)
+				bestProposal = new Pair<>(proposal, proposalUtility);
 
-			if (cost > maxUtil) {
-				maxUtil = cost;
-				chosenProposal = proposal;
-			}*/
 		}
 
-		System.out.println("proposal = " + chosenProposal + ", cost final = " + cost + ", utility = " + utility);
+		System.out.println("currentWeights: " + currentWeights);
+	}
+
+	double calculateStateWeight(String attribute, int value) {
+		LinkedHashMap<Integer, Double> attributeWeights =  negotiationAttributes.get(attribute);
+
+		for (Integer index: attributeWeights.keySet()) {
+			if(Math.ceil(value) == index)
+				return attributeWeights.get(index);
+		}
+
+		return -1;
+	}
+
+	HashMap<String, Double> calculateCurrentWeights() {
+		HashMap<String, Double> currentWeights = new HashMap<String, Double>();
+		currentWeights.put("fuel", calculateStateWeight("fuel", fuelLeft));
+		currentWeights.put("money", calculateStateWeight("money", moneyAvailable));
+		currentWeights.put("time", calculateStateWeight("time", timeLeft));
+		currentWeights.put("detour", calculateStateWeight("detour", distanceLeft));
+
+		return currentWeights;
+	}
+
+	HashMap<String, Double> calculateProposalWeights(String proposal) {
+		int tempMoney = moneyAvailable;
+
+		if (proposal.contains("Payment")) {
+			int paymentIndex = proposal.lastIndexOf(' ')+1;
+			int paidMoney = Integer.parseInt(proposal.substring(paymentIndex));
+			tempMoney -= paidMoney;
+		}
+
+		HashMap<String, Double> proposalWeights = new HashMap<String, Double>();
+
+		proposalWeights.put("fuel", calculateStateWeight("fuel", fuelLeft - fuelLoss));
+		proposalWeights.put("fuel", calculateStateWeight("money", tempMoney));
+		proposalWeights.put("fuel", calculateStateWeight("time", timeLeft - 1 / speed));
+		proposalWeights.put("fuel", calculateStateWeight("detour", distanceLeft + 1));
+
+		return proposalWeights;
 	}
 
 	/**

@@ -96,7 +96,6 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			previousRand = actualRand;
 
 			if(i == max+1) {
-				System.out.println("i " + i + " sum: " + sum + " left: " + (maxWeight-sum));
 
 				for (Map.Entry<Integer, Double> element: weights.entrySet()){
 					weights.put(min, element.getValue()+(maxWeight-sum));
