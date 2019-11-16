@@ -55,17 +55,6 @@ public class ATC extends Agent {
 	}
 
 	protected void centralizedBehaviour() {
-		ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-		cfp.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-		cfp.setReplyByDate(new Date(System.currentTimeMillis() + 1000));
-
-		for (int i = 0; i < agents.length; i++) {
-			AID agentID = agents[i].getName();
-			if (!agentID.getName().equals(this.getName())) {
-				cfp.addReceiver(agentID);
-			}
-		}
-
 		FSMBehaviour fsm = new FSMBehaviour(this);
 		
 		fsm.registerFirstState(moveBehaviour(), "Move State");
@@ -104,6 +93,12 @@ public class ATC extends Agent {
 				ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
 
 				if (!firstIterationOver) {
+					System.out.println("\n****************************");
+					System.out.println("***                      ***");
+					System.out.println("***    START FLIGHTS     ***");
+					System.out.println("***                      ***");
+					System.out.println("****************************\n");
+					
 					cfp.setContent("Start Flights: Agent " + this.getAgent().getLocalName()
 							+ " is requesting planes' movements");
 					System.out.println(cfp.getContent());

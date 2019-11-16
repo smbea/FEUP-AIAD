@@ -30,6 +30,11 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 
 		this.cfp.setContent("Start: Agent " + agent.getLocalName() + " is requesting proposals");
 
+		System.out.println("\n****************************");
+		System.out.println("***                      ***");
+		System.out.println("***  START NEGOTIATION   ***");
+		System.out.println("***                      ***");
+		System.out.println("****************************\n");
 		System.out.println(this.cfp.getContent());
 	}
 
