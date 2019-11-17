@@ -14,13 +14,10 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import javafx.util.Pair;
-import protocols.ContractNetInitiatorAgent;
 import protocols.ContractNetResponderAgent;
+import utils.*;
 import utils.PlaneComp;
 import utils.PlaneCoop;
-import utils.PlanePersonality;
-import utils.Util;
 
 @SuppressWarnings("serial")
 public class Plane extends Agent {
@@ -169,7 +166,7 @@ public class Plane extends Agent {
 
 		}
 
-		return bestProposal.getKey();
+		return bestProposal.getFirst();
 	}
 
 	double calculateStateWeight(String attribute, int value) {
