@@ -24,7 +24,8 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
 import jade.wrapper.AgentController;
 import protocols.ContractNetInitiatorAgent;
-import utils.Node;
+import swinginterface.GraphicInterface;
+import swinginterface.GraphicsDemo;
 import utils.Util;
 
 @SuppressWarnings("serial")
@@ -69,6 +70,10 @@ public class ATC extends Agent {
 				}
 				
 		}
+
+		if(!GraphicInterface.started)
+			GraphicInterface.start(traffic);
+
 	}
 
 	protected void printTraffic() {
@@ -207,6 +212,9 @@ public class ATC extends Agent {
 								}
 							}
 						}
+
+						if (GraphicsDemo.instance != null && GraphicInterface.started)
+							GraphicsDemo.instance.setTraffic(traffic);
 
 						traffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = msg.getSender()
 								.getLocalName();
