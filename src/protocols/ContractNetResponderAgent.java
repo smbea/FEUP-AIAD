@@ -1,6 +1,5 @@
 package protocols;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
@@ -12,18 +11,18 @@ import jade.proto.ContractNetResponder;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.FailureException;
-import utils.Util;
-import agents.Plane;
 
 @SuppressWarnings("serial")
 public class ContractNetResponderAgent extends ContractNetResponder {
 	Agent agent;
 	MessageTemplate mt;
+	String type;
 	
-	public ContractNetResponderAgent(Agent a, MessageTemplate mt) {
+	public ContractNetResponderAgent(Agent a, MessageTemplate mt, String type) {
 		super(a, mt);
 		this.agent = a;
 		this.mt = mt;
+		this.type = type;
 	}
 
 	/**
@@ -36,7 +35,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	protected ACLMessage handleCfp(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
 		System.out.println("Agent " + agent.getLocalName() + ": CFP received from " + cfp.getSender().getName()
 				+ ". Action is '" + cfp.getContent() + "'");
-		int proposalCode = 0;//Util.evaluateAction(cfp.getContent());
+		int proposalCode = 1;//Util.evaluateAction(cfp.getContent());
 		if (proposalCode == 1) {
 			// We provide a proposal
 			System.out.println("Agent " + agent.getLocalName() + ": Proposing " + proposalCode);

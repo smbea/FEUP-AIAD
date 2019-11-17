@@ -30,6 +30,11 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 
 		this.cfp.setContent("Start: Agent " + agent.getLocalName() + " is requesting proposals");
 
+		System.out.println("\n****************************");
+		System.out.println("***                      ***");
+		System.out.println("***  START NEGOTIATION   ***");
+		System.out.println("***                      ***");
+		System.out.println("****************************\n");
 		System.out.println(this.cfp.getContent());
 	}
 
@@ -70,7 +75,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	protected void handleAllResponses(Vector responses, Vector acceptances) {
 		if (responses.size() < nResponders) {
 			// Some responder didn't reply within the specified timeout
-			System.out.println("Timeout expired: missing "+(nResponders - responses.size())+" responses");
+			System.out.println("Timeout expired: missing " + (nResponders - responses.size()) + " responses");
 		}
 		// Evaluate proposals.
 		int bestProposal = -1;
@@ -91,17 +96,16 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 				}
 			}
 		}
+
 		// Accept the proposal of the best proposer
 		if (accept != null) {
-			System.out.println("Accepting proposal "+bestProposal+" from responder "+bestProposer.getName());
+			System.out.println("Accepting proposal " + bestProposal + " from responder " + bestProposer.getName());
 			accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-		}		
+		}
 	}
 
 	protected void handleInform(ACLMessage inform) {
 		System.out.println("Agent " + inform.getSender().getName() + " successfully performed the requested action");
 	}
-	
-	
 
 }
