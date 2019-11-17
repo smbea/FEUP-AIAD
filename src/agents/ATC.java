@@ -16,6 +16,8 @@ import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
 import protocols.ContractNetInitiatorAgent;
+import swinginterface.GraphicInterface;
+import swinginterface.GraphicsDemo;
 import utils.Util;
 
 @SuppressWarnings("serial")
@@ -40,6 +42,9 @@ public class ATC extends Agent {
 		for (int i = 0; i < splitInfo.length - 1; i = i + 3) {
 			traffic[Integer.parseInt(splitInfo[i + 1])][Integer.parseInt(splitInfo[i + 2])] = (String) splitInfo[i];
 		}
+
+		if(!GraphicInterface.started)
+			GraphicInterface.start(traffic);
 
 	}
 
@@ -157,6 +162,9 @@ public class ATC extends Agent {
 								}
 							}
 						}
+
+						if (GraphicsDemo.instance != null && GraphicInterface.started)
+							GraphicsDemo.instance.setTraffic(traffic);
 
 						traffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = msg.getSender()
 								.getLocalName();
