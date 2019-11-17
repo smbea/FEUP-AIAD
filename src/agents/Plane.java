@@ -1,10 +1,6 @@
 package agents;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Queue;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.Map.Entry;
 
 import jade.core.AID;
@@ -118,6 +114,11 @@ public class Plane extends Agent {
 		this.negotiationAttributes.put("detour", detourWeights);
 	}
 
+	private void recalculateDistanceWeights(int possibleDistance) {
+		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(possibleDistance, 0 , 1);
+		this.negotiationAttributes.replace("detour", detourWeights);
+	}
+
 
 
 	protected double proposalUtility(HashMap<String, Double> proposalWeights, HashMap<String, Double> currentWeights) {
@@ -211,11 +212,71 @@ public class Plane extends Agent {
 
 		proposalWeights.put("time",  calculateStateWeight("time", timeLeft - 1 / speed));
 
-		proposalWeights.put("detour", calculateStateWeight("detour", distanceLeft + 1));
-		//System.out.println("calculateProposalWeights - " + negotiationAttributes.get("detour"));
+		//new distance left
+		int newRouteLength = createPossibleRoute(proposal, finalPos.get("x"), finalPos.get("y"));
+		this.recalculateDistanceWeights(newRouteLength);
+		proposalWeights.put("detour", calculateStateWeight("detour", newRouteLength));
 
 		return proposalWeights;
 	}
+
+
+	protected int createPossibleRoute(String proposal, int xf, int yf) {
+
+		int xi = calculatePosition(proposal).getFirst();
+		int yi = calculatePosition(proposal).getSecond();
+
+		Node node = Util.findPath(traffic.length, xi, yi, xf, yf);
+
+		Stack<HashMap<String, Integer>> routeCoords = new Stack<>();
+
+		if (node != null) {
+			return Util.printPath(node) - 1;
+
+		} else {
+			return -1;
+		}
+	}
+
+	protected Pair<Integer, Integer> calculatePosition(String proposal) {
+
+		int xi = actualPos.get("x");
+		int yi = actualPos.get("y");
+
+		switch (proposal){
+			case "U":
+				yi-=1;
+				break;
+			case "D":
+				yi+=1;
+				break;
+			case "R":
+				xi+=1;
+				break;
+			case "L":
+				xi-=1;
+				break;
+			case "DDR":
+				xi+=1;
+				yi+=1;
+				break;
+			case "DDL":
+				xi-=1;
+				yi+=1;
+				break;
+			case "DUR":
+				xi+=1;
+				yi-=1;
+				break;
+			case "DUL":
+				xi-=1;
+				yi-=1;
+				break;
+		}
+
+		return new Pair<Integer, Integer>(xi, yi);
+	}
+
 
 	/**
 	 * 
