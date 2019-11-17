@@ -37,7 +37,7 @@ public class ATC extends Agent {
 	private AMSAgentDescription[] agents = null;
 	boolean firstIterationOver = false;
 
-	protected void createEmptyTrafficMap(int xi, int yi, int xf, int yf) {
+	protected void createTrafficMap() {
 		Object[] args = getArguments();
 		String s = (String) args[0];
 		String[] splitInfo = s.split(" ");
@@ -49,33 +49,34 @@ public class ATC extends Agent {
 		}
 
 		for (int i = 0; i < splitInfo.length - 1; i = i + 3) {
-				traffic[Integer.parseInt(splitInfo[i+1])][Integer.parseInt(splitInfo[i+2])] = (String) splitInfo[i];
-			
-				printTraffic();
-				String[][] route = new String[5][5];
-				
-				Node node = Util.findPath(traffic.length, xi, yi, xf, yf);
-				
-				Stack<HashMap<String, Integer>> routeCoords = new Stack<HashMap<String, Integer>>();
+			traffic[Integer.parseInt(splitInfo[i + 1])][Integer.parseInt(splitInfo[i + 2])] = (String) splitInfo[i];
+		}
+		printTraffic();
+		
+		if(!GraphicInterface.started)
+			GraphicInterface.start(traffic);
+	}
 
-				if (node != null) {
+	protected void createRoute(String agent, int xi, int yi, int xf, int yf) {
+		String[][] route = new String[5][5];
+				
+		Node node = Util.findPath(traffic.length, xi, yi, xf, yf);
+				
+		Stack<HashMap<String, Integer>> routeCoords = new Stack<HashMap<String, Integer>>();
+
+		if (node != null) {
 					System.out.println("Agent " + this.getLocalName() + " is generating a route ....");
 					System.out.print("Shortest path is: ");
 					int len = Util.printPath(node) - 1;
 					Util.saveRoute(node, routeCoords);
 					System.out.println("\nShortest path length is " + len);
 					
-					Util.routes.put(splitInfo[i], routeCoords);
+					Util.routes.put(agent, routeCoords);
 				} else {
 					System.out.println("Destination not found");
 				}
 				
 		}
-
-		if(!GraphicInterface.started)
-			GraphicInterface.start(traffic);
-
-	}
 
 	protected void printTraffic() {
 		for (int i = 0; i < traffic.length; i++) {
@@ -163,8 +164,9 @@ public class ATC extends Agent {
 						finalIndex = content.lastIndexOf("]");
 						String[] coordFinal = content.substring(index + 1, finalIndex).split(", ");
 
-						createEmptyTrafficMap(Integer.parseInt(coordInit[0]), Integer.parseInt(coordInit[1]), Integer.parseInt(coordFinal[0]), Integer.parseInt(coordFinal[1]));
-					
+						createRoute(msg.getSender().getLocalName(), Integer.parseInt(coordInit[0]), Integer.parseInt(coordInit[1]),
+								Integer.parseInt(coordFinal[0]), Integer.parseInt(coordFinal[1]));
+
 						ACLMessage reply = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 						reply.setContent("Accepting initial move '" + content + "' from responder "
 								+ msg.getSender().getLocalName());
@@ -290,12 +292,8 @@ public class ATC extends Agent {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		Object[] args = getArguments();
-		String s = (String) args[0];
-		String[] splitInfo = s.split(" ");
 
-		method = splitInfo[splitInfo.length - 1];
+		createTrafficMap();
 
 		manageBehaviour(method);
 	}
