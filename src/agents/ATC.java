@@ -1,7 +1,14 @@
 package agents;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Stack;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -15,7 +22,9 @@ import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
+import jade.wrapper.AgentController;
 import protocols.ContractNetInitiatorAgent;
+import utils.Node;
 import utils.Util;
 
 @SuppressWarnings("serial")
@@ -26,11 +35,11 @@ public class ATC extends Agent {
 	private AMSAgentDescription[] agents = null;
 	boolean firstIterationOver = false;
 
-	protected void createTraffic() {
+	protected void createEmptyTrafficMap(int xi, int yi, int xf, int yf) {
 		Object[] args = getArguments();
 		String s = (String) args[0];
 		String[] splitInfo = s.split(" ");
-		
+
 		method = splitInfo[splitInfo.length - 1];
 
 		for (int i = 0; i < traffic.length; i++) {
@@ -38,9 +47,28 @@ public class ATC extends Agent {
 		}
 
 		for (int i = 0; i < splitInfo.length - 1; i = i + 3) {
-			traffic[Integer.parseInt(splitInfo[i + 1])][Integer.parseInt(splitInfo[i + 2])] = (String) splitInfo[i];
-		}
+				traffic[Integer.parseInt(splitInfo[i+1])][Integer.parseInt(splitInfo[i+2])] = (String) splitInfo[i];
+			
+				printTraffic();
+				String[][] route = new String[5][5];
+				
+				Node node = Util.findPath(traffic.length, xi, yi, xf, yf);
+				
+				Stack<HashMap<String, Integer>> routeCoords = new Stack<HashMap<String, Integer>>();
 
+				if (node != null) {
+					System.out.println("Agent " + this.getLocalName() + " is generating a route ....");
+					System.out.print("Shortest path is: ");
+					int len = Util.printPath(node) - 1;
+					Util.saveRoute(node, routeCoords);
+					System.out.println("\nShortest path length is " + len);
+					
+					Util.routes.put(splitInfo[i], routeCoords);
+				} else {
+					System.out.println("Destination not found");
+				}
+				
+		}
 	}
 
 	protected void printTraffic() {
@@ -52,17 +80,21 @@ public class ATC extends Agent {
 		}
 	}
 
-	protected void centralizedBehaviour() {
-		FSMBehaviour fsm = new FSMBehaviour(this);
-		
-		fsm.registerFirstState(moveBehaviour(), "Move State");
-		fsm.registerLastState(negotiationBehaviour(), "Negotiation State");
+	protected void manageBehaviour(String type) {
+		if (type.equals("centralized")) {
+			FSMBehaviour fsm = new FSMBehaviour(this);
 
-		fsm.registerDefaultTransition("Move State", "Negotiation State");
-		
-		addBehaviour(fsm);
+			fsm.registerFirstState(moveBehaviour(), "Move State");
+			fsm.registerLastState(negotiationBehaviour(), "Negotiation State");
+
+			fsm.registerDefaultTransition("Move State", "Negotiation State");
+
+			addBehaviour(fsm);
+		} else if (type.equals("decentralized")) {
+			addBehaviour(moveBehaviour());
+		}
 	}
-	
+
 	protected Behaviour negotiationBehaviour() {
 		return (new OneShotBehaviour(this) {
 			@Override
@@ -77,10 +109,10 @@ public class ATC extends Agent {
 						cfp.addReceiver(agentID);
 					}
 				}
-				
+
 				addBehaviour(new ContractNetInitiatorAgent(this.getAgent(), cfp));
 			}
-			
+
 		});
 	}
 
@@ -96,7 +128,7 @@ public class ATC extends Agent {
 					System.out.println("***    START FLIGHTS     ***");
 					System.out.println("***                      ***");
 					System.out.println("****************************\n");
-					
+
 					cfp.setContent("Start Flights: Agent " + this.getAgent().getLocalName()
 							+ " is requesting planes' movements");
 					System.out.println(cfp.getContent());
@@ -115,7 +147,25 @@ public class ATC extends Agent {
 				if (msg != null) {
 					String content = msg.getContent();
 
-					if (msg.getPerformative() == ACLMessage.PROPOSE) {
+					if (msg.getPerformative() == ACLMessage.PROPOSE
+							&& msg.getContent().indexOf("Request_Route") != -1) {
+						System.out.println("Agent " + msg.getSender().getLocalName() + " requesting route generation");
+						int index = content.indexOf("[");
+						int finalIndex = content.indexOf("]");
+						String[] coordInit = content.substring(index + 1, finalIndex).split(", ");
+						index = content.lastIndexOf("[");
+						finalIndex = content.lastIndexOf("]");
+						String[] coordFinal = content.substring(index + 1, finalIndex).split(", ");
+
+						createEmptyTrafficMap(Integer.parseInt(coordInit[0]), Integer.parseInt(coordInit[1]), Integer.parseInt(coordFinal[0]), Integer.parseInt(coordFinal[1]));
+					
+						ACLMessage reply = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+						reply.setContent("Accepting initial move '" + content + "' from responder "
+								+ msg.getSender().getLocalName());
+						reply.addReceiver(msg.getSender());
+						send(reply);
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE
+							&& msg.getContent().indexOf("Request_Move") != -1) {
 						System.out.println("Agent " + msg.getSender().getLocalName() + " proposed '" + content + "'");
 						int index = content.indexOf("[");
 						int finalIndex = content.indexOf("]");
@@ -137,8 +187,8 @@ public class ATC extends Agent {
 									reply.addReceiver(agentID);
 								}
 							}
-							System.out.println("Agent " + getAgent().getLocalName()
-									+ ": Conflict detected! Rejecting proposal");
+							System.out.println(
+									"Agent " + getAgent().getLocalName() + ": Conflict detected! Rejecting proposal");
 							send(reply);
 						}
 					} else if (msg.getPerformative() == ACLMessage.INFORM) {
@@ -160,8 +210,6 @@ public class ATC extends Agent {
 
 						traffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = msg.getSender()
 								.getLocalName();
-
-						Util.printTraffic(traffic);
 					} else {
 						System.out.println(msg.getContent());
 						System.out.println("Not traffic");
@@ -176,7 +224,7 @@ public class ATC extends Agent {
 		};
 	}
 
-	protected void descentralizedBehaviour() {
+	protected void decentralizedBehaviour() {
 		addBehaviour(new CyclicBehaviour() {
 
 			@Override
@@ -218,14 +266,13 @@ public class ATC extends Agent {
 	}
 
 	protected void setup() {
-		createTraffic();
-
 		try {
 			SearchConstraints c = new SearchConstraints();
 			c.setMaxResults(new Long(-1));
 			agents = AMSService.search(this, new AMSAgentDescription(), c);
 			for (int index = 0; index < agents.length; index++) {
-				if (!agents[index].getName().getLocalName().equals("df") && !agents[index].getName().getLocalName().equals("rma")
+				if (!agents[index].getName().getLocalName().equals("df")
+						&& !agents[index].getName().getLocalName().equals("rma")
 						&& !agents[index].getName().getLocalName().equals("ams")
 						&& !agents[index].getName().getLocalName().equals(this.getLocalName())) {
 					Util.nResponders++;
@@ -234,15 +281,13 @@ public class ATC extends Agent {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		Object[] args = getArguments();
+		String s = (String) args[0];
+		String[] splitInfo = s.split(" ");
 
-		if (method.equals("descentralized")) {
-			descentralizedBehaviour();
-		} else if (method.equals("centralized")) {
-			// CODAR ATC PARA centralized. Semelhante ao de cima mas em vez de devolver
-			// checka conflito e começa negocição como initiator pedindo aos avios em
-			// conflito (responders) propopsals escolhendo depois a melhor
+		method = splitInfo[splitInfo.length - 1];
 
-			centralizedBehaviour();
-		}
+		manageBehaviour(method);
 	}
 }

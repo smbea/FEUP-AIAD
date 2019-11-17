@@ -1,6 +1,5 @@
 package protocols;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Random;
 
@@ -11,18 +10,18 @@ import jade.proto.ContractNetResponder;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.FailureException;
-import utils.Util;
-import agents.Plane;
 
 @SuppressWarnings("serial")
 public class ContractNetResponderAgent extends ContractNetResponder {
 	Agent agent;
 	MessageTemplate mt;
+	String type;
 	
-	public ContractNetResponderAgent(Agent a, MessageTemplate mt) {
+	public ContractNetResponderAgent(Agent a, MessageTemplate mt, String type) {
 		super(a, mt);
 		this.agent = a;
 		this.mt = mt;
+		this.type = type;
 	}
 
 	/**

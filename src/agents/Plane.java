@@ -1,7 +1,6 @@
 package agents;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Queue;
@@ -15,7 +14,6 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import protocols.ContractNetInitiatorAgent;
 import protocols.ContractNetResponderAgent;
 import utils.Util;
 
@@ -52,6 +50,7 @@ public class Plane extends Agent {
 	String method;
 	protected static int cidCnt = 0;
 	Queue<String> route = new LinkedList<>();
+	Queue<String> currentPath = new LinkedList<>();
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
 	String[][] traffic = new String[5][5];
@@ -109,6 +108,14 @@ public class Plane extends Agent {
 			speed = plane.speed;
 			moneyAvailable = plane.moneyAvailable;
 		}
+	}
+	
+	public HashMap<String, Integer> getActualPos() {
+		return actualPos;
+	}
+	
+	public HashMap<String, Integer> getFinalPos() {
+		return finalPos;
 	}
 
 	/**
@@ -275,147 +282,22 @@ public class Plane extends Agent {
 	}
 
 	/**
-	 * Implements Descentralized Air Traffic, i.e., planes communicate and negotiate
+	 * Implements Centralized Air Traffic, i.e., planes communicate and negotiate
+	 * with ATC and decentralized Air Traffic, i.e., planes communicate and negotiate
 	 * with each other.
 	 */
-	protected void descentralizedBehaviour() {
-		ParallelBehaviour parallel = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL);
-
-		Behaviour movement = new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000) {
-
-			@Override
-			protected void onTick() {
-
-				if (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y")) {
-					System.out.println("I " + name + " arrived at destiny");
-					finished = true;
-					stop();
-				}
-
-				if (!finished) {
-					try {
-						ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-						msg.setContent("traffic " + actualPos.get("x") + " " + actualPos.get("y"));
-						msg.addReceiver(getAID("control"));
-						send(msg);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-
-					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
-					answer = blockingReceive();
-					String s = answer.getContent();
-					traffic = Util.refactorTrafficArray(s);
-
-					// Util.checkConflict(actualPos, traffic, name);
-
-					if (Util.getConflicts().containsKey(name)) {
-						conflictPlane = Util.getConflicts().get(name);
-						negot = true;
-					}
-
-					if (!negot) {
-						if (conflictPlane.equals("none")) {
-							System.out.println("Plane " + name + " ready to move");
-							Util.move(route, actualPos, distanceLeft);
-						} else {
-							negot = true;
-						}
-
-					}
-				}
-			}
-		};
-
-		parallel.addSubBehaviour(movement);
-
-		parallel.addSubBehaviour(new SimpleBehaviour() {
-
-			@Override
-			public boolean done() {
-				return false;
-			}
-
-			@Override
-			public void action() {
-
-				if (Util.getConflicts().containsKey(name))
-					conflictPlane = Util.getConflicts().get(name);
-
-				if (!conflictPlane.equals("none") || Util.getConflicts().containsKey(name)) {
-					negot = true;
-
-					addBehaviour(new SimpleBehaviour() {
-
-						@Override
-						public boolean done() {
-							return !negot;
-						}
-
-						@Override
-						public void action() {
-							if (Util.getInitiator().equals("null"))
-								Util.setInitiator(name);
-							else
-								Util.setResponder(name);
-
-							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-							msg.setContent("negotiation");
-							msg.addReceiver(getAID(conflictPlane));
-							send(msg);
-
-							addBehaviour(new SimpleBehaviour() {
-
-								@Override
-								public void action() {
-									ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
-									answer = blockingReceive();
-									String s = answer.getContent();
-									System.out.println(
-											"Plane: " + name + " " + s + " with " + answer.getSender().getLocalName());
-
-									if (Util.getInitiator().equals(name)) {
-										System.out.println("Plane: " + name + " is initiator");
-									} else if (Util.getResponder().equals(name)) {
-										System.out.println("Plane: " + name + " is responder");
-									}
-								}
-
-								@Override
-								public boolean done() {
-
-									return false;
-								}
-
-							});
-
-						}
-					});
-
-				}
-				comm = true;
-			}
-		});
-
-		addBehaviour(parallel);
-	}
-
-	/**
-	 * Implements Centralized Air Traffic, i.e., planes communicate and negotiate
-	 * with ATC.
-	 */
-	protected void centralizedBehaviour() {
+	protected void manageBehaviour(String type) {
 		FSMBehaviour fsm = new FSMBehaviour(this);
 
 		fsm.registerFirstState(moveBehaviour(), "Move State");
-		fsm.registerLastState(negotiationBehaviour(), "Negotiation State");
+		fsm.registerLastState(negotiationBehaviour(type), "Negotiation State");
 
 		fsm.registerDefaultTransition("Move State", "Negotiation State");
 
 		addBehaviour(fsm);
 	}
 
-	protected Behaviour negotiationBehaviour() {
+	protected Behaviour negotiationBehaviour(String type) {
 		return (new OneShotBehaviour(this) {
 			@Override
 			public void action() {
@@ -423,7 +305,7 @@ public class Plane extends Agent {
 						MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
 						MessageTemplate.MatchPerformative(ACLMessage.CFP));
 
-				addBehaviour(new ContractNetResponderAgent(this.getAgent(), template));
+				addBehaviour(new ContractNetResponderAgent(this.getAgent(), template, type));
 			}
 		});
 	}
@@ -455,6 +337,34 @@ public class Plane extends Agent {
 					} else if (answer.getPerformative() == ACLMessage.CFP) {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+							msg.setContent("Request_Route: Agent Plane " + this.getAgent().getLocalName()
+									+ " is requesting route from [" + actualPos.get("x") + ", " + actualPos.get("y")
+									+ "] to [" + finalPos.get("x") + ", " + finalPos.get("y") + "]");
+							msg.addReceiver(getAID("control"));
+							send(msg);
+							System.out.println(msg.getContent());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
+						Util.move(this.getAgent().getLocalName(), actualPos, distanceLeft);
+						try {
+							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+							msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
+									+ actualPos.get("x") + ", " + actualPos.get("y") + "]' successfully performed");
+							msg.addReceiver(getAID("control"));
+							send(msg);
+							System.out.println(msg.getContent());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+
+					block();
+
+					if (firstIterationOver && !isOver()) {
+						try {
+							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName()
 									+ " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y")
 									+ "] according to route");
@@ -464,8 +374,52 @@ public class Plane extends Agent {
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
+					}
+
+					firstIterationOver = true;
+				}
+			}
+		});
+	}
+	
+	protected Behaviour moveDecentralizedBehaviour() {
+		return (new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000) {
+			/**
+			 * Plane arrived at destiny
+			 */
+			public boolean isOver() {
+				if (Util.confirmedConflictCounter == Util.nResponders) {
+					stop();
+					return true;
+				}
+				return false;
+			}
+
+			@Override
+			protected void onTick() {
+				if (!isOver()) {
+					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
+					answer = blockingReceive();
+
+					if (answer.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
+						System.out.println("Conflict detected! Agent " + getAgent().getLocalName()
+								+ " is starting negotiations...");
+
+						Util.confirmedConflictCounter++;
+					} else if (answer.getPerformative() == ACLMessage.CFP) {
+						try {
+							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+							msg.setContent("Request_Map: Agent Plane " + this.getAgent().getLocalName()
+									+ " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y")
+									+ "] according to route");
+							msg.addReceiver(getAID("control"));
+							send(msg);
+							System.out.println(msg.getContent());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
-						Util.move(route, actualPos, distanceLeft);
+						Util.move(this.getAgent().getLocalName(), actualPos, distanceLeft);
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
@@ -502,13 +456,6 @@ public class Plane extends Agent {
 
 	protected void setup() {
 		argCreation();
-
-		if (method.equals("descentralized")) {
-			descentralizedBehaviour();
-		} else if (method.equals("centralized")) {
-			// CODAR BEHAVIOURS CENTRALIZED. MOVE igual ao de cima. Modificar segundo
-			// behaviour
-			centralizedBehaviour();
-		}
+		manageBehaviour(method);
 	}
 }

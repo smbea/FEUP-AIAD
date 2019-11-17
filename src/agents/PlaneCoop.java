@@ -27,17 +27,17 @@ public class PlaneCoop
 	int bid=10;
 	int minAcceptBid=15;
 	int moneyAvailable = 20;
-	Queue<String> route = new LinkedList<>(){{add("DDR");add("DDR");add("DDR");add("DDR");}};
+	Queue<String> route = null;
 	/**
 	 * Predicted Flight Time Left (minutes)
 	 */
-	int timeLeft = route.size()*Util.getMovementCost()*60/speed;
+	int timeLeft/* = route.size()*Util.getMovementCost()*60/speed*/;
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 4);put("y", 4);}};
 	/**
 	 * Current Distance Left (km)
 	 */
-	int distanceLeft = route.size()*Util.getMovementCost();
+	int distanceLeft/* = route.size()*Util.getMovementCost()*/;
 
 	/**
 	 * Numerical value that is attached to a particular attribute's level. 

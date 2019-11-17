@@ -28,17 +28,17 @@ public class PlaneComp
 	int fuelLoss = 10;
 	int moneyAvailable = 100;
 	int bid=10;
-	Queue<String> route = new LinkedList<>(){{add("DUL");add("DUL");add("DUL");}};
+	Queue<String> route = null;
 	/**
 	 * Predicted Flight Time Left (minutes)
 	 */
-	int timeLeft = route.size()*Util.getMovementCost()*60/speed;
+	int timeLeft/* = route.size()*Util.getMovementCost()*60/speed*/;
 	HashMap<String, Integer> actualPos = new HashMap<String, Integer>(){{put("x", 3);put("y", 3);}};
 	HashMap<String, Integer> finalPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
 	/**
 	 * Current Distance Left (km)
 	 */
-	int distanceLeft = route.size()*Util.getMovementCost();
+	int distanceLeft/* = route.size()*Util.getMovementCost()*/;
 	String goal="money";								//money, time, fuel, etc
 	
 	/**
