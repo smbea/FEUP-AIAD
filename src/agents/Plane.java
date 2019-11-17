@@ -88,10 +88,6 @@ public class Plane extends Agent {
 			PlaneComp plane = new PlaneComp();
 			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getFuelLoss(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
 			initPlaneWeights(plane, plane.getDistanceLeft());
-		} else if (name.equals("Test")) {
-			PlaneTest plane = new PlaneTest();
-			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getFuelLoss(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
-			initPlaneWeights(plane, plane.getDistanceLeft());
 		}
 	}
 
