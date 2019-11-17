@@ -37,14 +37,11 @@ public class Util {
 		
 		if (nextMove.get("x") == actualPos.get("x") && nextMove.get("y") == actualPos.get("y")) {
 			nextMove = route.pop();
-			System.out.println("next move = " + nextMove.get("x")+","+nextMove.get("y"));
 		}
 		distanceLeft--;
 		
 		actualPos.replace("x", nextMove.get("x"));
 		actualPos.replace("y", nextMove.get("y"));
-		
-		System.out.println("next move = " + actualPos.get("x")+","+actualPos.get("y"));
 	}
 
 	public static String[][] refactorTrafficArray(String trafficS) {
