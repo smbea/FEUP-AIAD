@@ -26,6 +26,7 @@ import jade.wrapper.AgentController;
 import protocols.ContractNetInitiatorAgent;
 import swinginterface.GraphicInterface;
 import swinginterface.GraphicsDemo;
+import utils.Node;
 import utils.Util;
 
 @SuppressWarnings("serial")
