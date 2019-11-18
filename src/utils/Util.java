@@ -11,7 +11,10 @@ import java.util.Stack;
 
 public class Util {
 	private static int movementCost = 200;
-	static int fuelConsumptionByMove = 1;
+	/**
+	 * Plane average total fuel loss of 10 L/km (liters per kilometer)
+	 */
+	public static int fuelLoss = 10;
 	private static HashMap<String, String> conflicts = new HashMap<String, String>();
 	private static String initiator = "null";
 	private static String responder = "null";
@@ -19,6 +22,7 @@ public class Util {
 	public static int confirmedConflictCounter = 0;
 	public static int nResponders;
 	public static HashMap<String, Stack<HashMap<String, Integer>>> routes = new HashMap<String, Stack<HashMap<String, Integer>>>();
+	public static int mapSize;
 	
 	// Below arrays details all 8 possible movements from a cell
 	private static int[] row = { -1, 0, 0, 1, -1, -1, 1, 1};
@@ -42,37 +46,6 @@ public class Util {
 		
 		actualPos.replace("x", nextMove.get("x"));
 		actualPos.replace("y", nextMove.get("y"));
-	}
-
-	public static String[][] refactorTrafficArray(String trafficS) {
-		String[] strings = trafficS.replace("[", "").replace("]", ">").split(", ");
-		List<String> stringList = new ArrayList<>();
-		List<String[]> tempResult = new ArrayList<>();
-		for (String str : strings) {
-			if (str.endsWith(">")) {
-				str = str.substring(0, str.length() - 1);
-				if (str.endsWith(">")) {
-					str = str.substring(0, str.length() - 1);
-				}
-				stringList.add(str);
-				tempResult.add(stringList.toArray(new String[stringList.size()]));
-				stringList = new ArrayList<>();
-			} else {
-				stringList.add(str);
-			}
-		}
-		return tempResult.toArray(new String[tempResult.size()][]);
-	}
-
-	public static void printTraffic(String[][] traffic) {
-		System.out.println();
-		for (int i = 0; i < traffic.length; i++) {
-			for (int j = 0; j < traffic[i].length; j++) {
-				System.out.print(traffic[i][j] + " ");
-			}
-			System.out.println();
-		}
-		System.out.println();
 	}
 
 	public static boolean checkConflict(String[] actualPos, String[][] traffic, String name) {
@@ -207,7 +180,7 @@ public class Util {
 	 * @param destY
 	 * @return
 	 */
-	public static Node findPath(int mapSize, int x, int y, int destX, int destY)
+	public static Node findPath(int x, int y, int destX, int destY)
 	{
 		// create a queue and enqueue first node
 		Queue<Node> q = new ArrayDeque<>();
@@ -263,6 +236,145 @@ public class Util {
 		}
 
 		// return null if path is not possible
+		return null;
+	}
+	
+	public static int createPossibleRoute(String proposal, HashMap<String, Integer> actualPos, int xf, int yf) {
+		Pair<Integer, Integer> position = calculatePosition(proposal, actualPos);
+		
+		if (position != null) {
+			int xi = position.getFirst();
+			int yi = position.getSecond();
+			
+			Node node = Util.findPath(xi, yi, xf, yf);
+	
+			Stack<HashMap<String, Integer>> routeCoords = new Stack<>();
+	
+			return saveRoute(node, routeCoords);
+		}
+		
+		return -1;
+	}
+
+	public static Pair<Integer, Integer> calculatePosition(String proposal, HashMap<String, Integer> actualPos) {
+		int xi = actualPos.get("x");
+		int yi = actualPos.get("y");
+
+		if (proposal.contains("Move up")) {
+			yi-=1;
+		} else if (proposal.contains("Move down")) {
+			yi+=1;
+		} else if (proposal.contains("Move right")) {
+			xi+=1;
+		} else if (proposal.contains("Move left")) {
+			xi-=1;
+		} else if (proposal.contains("Move down right")) {
+			xi+=1;
+			yi+=1;
+		} else if (proposal.contains("Move down left")) {
+			xi-=1;
+			yi+=1;
+		} else if (proposal.contains("Move top right")) {
+			xi+=1;
+			yi-=1;
+		} else if (proposal.contains("Move top left")) {
+			xi-=1;
+			yi-=1;
+		} else {
+			return null;
+		}
+		
+		if(!isValid(xi, yi, mapSize)) {
+			return null;
+		}
+
+		return new Pair<Integer, Integer>(xi, yi);
+	}
+	
+	public static String parseMove(String moveCode) {
+		String move = null;
+		
+		switch(moveCode) {
+		case "U":
+			move = "up";
+			break;
+		case "D":
+			move = "down";
+			break;
+		case "L":
+			move = "left";
+			break;
+		case "R":
+			move = "right";
+			break;
+		case "DDR":
+			move = "down right";
+			break;
+		case "DDL":
+			move = "down left";
+			break;
+		case "DUL":
+			move = "top left";
+			break;
+		case "DUR":
+			move = "top right";
+			break;
+		default:
+			break;
+		}
+		
+		return move;
+	}
+	
+	public static String parseStringMove(String move) {
+		String moveCode = null;
+		
+		switch(move) {
+		case "up":
+			moveCode = "U";
+			break;
+		case "down":
+			moveCode = "D";
+			break;
+		case "left":
+			moveCode = "L";
+			break;
+		case "right":
+			moveCode = "R";
+			break;
+		case "down right":
+			moveCode = "DDR";
+			break;
+		case "down left":
+			moveCode = "DDL";
+			break;
+		case "top left":
+			moveCode = "DUL";
+			break;
+		case "top right":
+			moveCode = "DUR";
+			break;
+		default:
+			break;
+		}
+		
+		return moveCode;
+	}
+	
+	public static HashMap<String, Integer> findAgentMap(String agent, String[][] traffic) {
+		for (int i = 0; i < traffic.length; i++) {
+			for (int j = 0; j < traffic.length; j++) {
+				if (traffic[i][j].equals(agent)) {
+					HashMap<String, Integer> coord = new HashMap<String, Integer>();
+					
+					coord.put("x", i);
+					coord.put("y", j);
+					
+					return coord;
+				}
+			}
+		}
+		
 		return null;
 	}
 

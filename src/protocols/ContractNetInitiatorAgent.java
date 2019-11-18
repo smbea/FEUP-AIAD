@@ -1,21 +1,19 @@
 package protocols;
 
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.domain.FIPANames;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
+import utils.Pair;
 import utils.Util;
 
 import java.util.Vector;
 
 import agents.ATC;
-import agents.Plane;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.List;
 
 @SuppressWarnings("serial")
 public class ContractNetInitiatorAgent extends ContractNetInitiator {
@@ -78,34 +76,78 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 			System.out.println("Timeout expired: missing " + (nResponders - responses.size()) + " responses");
 		}
 		// Evaluate proposals.
-		int bestProposal = -1;
+		int counter = 0;
+		double bestProposal = -1;
 		AID bestProposer = null;
 		ACLMessage accept = null;
 		Enumeration e = responses.elements();
+		List<Pair<Integer, Integer>> destinations = new ArrayList<>();
+	
 		while (e.hasMoreElements()) {
 			ACLMessage msg = (ACLMessage) e.nextElement();
 			if (msg.getPerformative() == ACLMessage.PROPOSE) {
-				ACLMessage reply = msg.createReply();
-				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-				acceptances.addElement(reply);
-				int proposal = Integer.parseInt(msg.getContent());
-				if (proposal > bestProposal) {
-					bestProposal = proposal;
-					bestProposer = msg.getSender();
-					accept = reply;
-				}
+				Pair<Integer, Integer> dest = Util.calculatePosition(msg.getContent(), Util.findAgentMap(msg.getSender().getLocalName(), ((ATC)this.getAgent()).getTraffic()));
+				destinations.add(dest);
+				
+				counter++;
 			}
 		}
-
-		// Accept the proposal of the best proposer
-		if (accept != null) {
-			System.out.println("Accepting proposal " + bestProposal + " from responder " + bestProposer.getName());
-			accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+		
+		boolean equilibrium = true;
+		
+		for (int i = 0; i < destinations.size() - 1; i++) {
+			if (destinations.get(i).getFirst() == destinations.get(i+1).getFirst()
+				&& destinations.get(i).getSecond() == destinations.get(i).getSecond()) {
+				equilibrium = false;
+			}
+		}
+		
+		if (equilibrium) {
+			System.out.println("Equilibrium");
+			e = responses.elements();
+			
+			while (e.hasMoreElements()) {
+				ACLMessage msg = (ACLMessage) e.nextElement();
+				if (msg.getPerformative() == ACLMessage.PROPOSE) {
+					ACLMessage reply = msg.createReply();
+					reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+					acceptances.addElement(reply);
+				}
+			}
+		} else {
+			e = responses.elements();
+			
+			while (e.hasMoreElements()) {
+				ACLMessage msg = (ACLMessage) e.nextElement();
+				if (msg.getPerformative() == ACLMessage.PROPOSE) {
+					ACLMessage reply = msg.createReply();
+					reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+					acceptances.addElement(reply);
+					
+					int index = msg.getContent().indexOf("=");
+					double proposal = Double.parseDouble(msg.getContent().substring(index+1));
+					if (proposal > bestProposal) {
+						bestProposal = proposal;
+						bestProposer = msg.getSender();
+						accept = reply;
+					}
+				}
+			}
+			
+			// Accept the proposal of the best proposer
+			if (accept != null) {
+				System.out.println("Accepting proposal " + bestProposal + " from responder " + bestProposer.getName());
+				accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+			}
 		}
 	}
 
 	protected void handleInform(ACLMessage inform) {
 		System.out.println("Agent " + inform.getSender().getName() + " successfully performed the requested action");
+	}
+	
+	protected void evaluateProposals() {
+		
 	}
 
 }

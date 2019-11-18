@@ -22,10 +22,6 @@ public class PlaneComp
 	 * Plane average speed of 100 km/h (kilometers per hour)
 	 */
 	int speed = 100;
-	/**
-	 * Plane average total fuel loss of 10 L/km (liters per kilometer)
-	 */
-	int fuelLoss = 10;
 	int moneyAvailable = 100;
 	int bid=10;
 	Queue<String> route = null;
@@ -55,21 +51,21 @@ public class PlaneComp
 		// maximize amount of fuel
 		put("fuel", new LinkedHashMap<Double, Double>() {{
 			put(4000.0, 0.5);          // ideal alternative value
-			put(4000.0-fuelLoss, 0.3);     // lower limit of ideal values
-			put(4000.0-distanceLeft*fuelLoss/2, 0.15); // upper limit for barely acceptable value
-			put(4000.0-distanceLeft*fuelLoss, 0.05); // lowest acceptable value
+			put(4000.0-Util.fuelLoss, 0.3);     // lower limit of ideal values
+			put(4000.0-distanceLeft*Util.fuelLoss/2, 0.15); // upper limit for barely acceptable value
+			put(4000.0-distanceLeft*Util.fuelLoss, 0.05); // lowest acceptable value
 		}});
 		// minimize amount of flight time
 		put("time", new LinkedHashMap<Double, Double>() {{
 			put(timeLeft/60.0, 0.05);
 			put(timeLeft/60/2.0, 0.15);
-			put(((fuelLeft/fuelLoss)/speed)/2.0, 0.3);
-			put(1.0*(fuelLeft/fuelLoss)/speed, 0.5);
+			put(((fuelLeft/Util.fuelLoss)/speed)/2.0, 0.3);
+			put(1.0*(fuelLeft/Util.fuelLoss)/speed, 0.5);
 		}});
 		// minimize detour
 		put("detour", new LinkedHashMap<Double, Double>() {{
-			put(1.0*fuelLeft/fuelLoss, 0.05);
-			put(fuelLeft/fuelLoss/2.0, 0.15);
+			put(1.0*fuelLeft/Util.fuelLoss, 0.05);
+			put(fuelLeft/Util.fuelLoss/2.0, 0.15);
 			put(1.0, 0.3);
 			put(0.0, 0.5);
 		}});

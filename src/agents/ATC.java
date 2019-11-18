@@ -51,6 +51,8 @@ public class ATC extends Agent {
 		for (int i = 0; i < splitInfo.length - 1; i = i + 3) {
 			traffic[Integer.parseInt(splitInfo[i + 1])][Integer.parseInt(splitInfo[i + 2])] = (String) splitInfo[i];
 		}
+		
+		Util.mapSize = traffic.length;
 		printTraffic();
 		
 		if(!GraphicInterface.started)
@@ -60,7 +62,7 @@ public class ATC extends Agent {
 	protected void createRoute(String agent, int xi, int yi, int xf, int yf) {
 		String[][] route = new String[5][5];
 				
-		Node node = Util.findPath(traffic.length, xi, yi, xf, yf);
+		Node node = Util.findPath(xi, yi, xf, yf);
 				
 		Stack<HashMap<String, Integer>> routeCoords = new Stack<HashMap<String, Integer>>();
 
@@ -83,6 +85,7 @@ public class ATC extends Agent {
 			for (int j = 0; j < traffic[i].length; j++) {
 				System.out.print(traffic[i][j] + " ");
 			}
+			System.out.println();
 		}
 	}
 
@@ -295,5 +298,9 @@ public class ATC extends Agent {
 		createTrafficMap();
 
 		manageBehaviour(method);
+	}
+
+	public String[][] getTraffic() {
+		return traffic;
 	}
 }

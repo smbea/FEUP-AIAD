@@ -20,25 +20,21 @@ public class Plane extends Agent {
 	/**
 	 * Fuel Left (liters)
 	 */
-	int fuelLeft;
-	/**
-	 * Plane average total fuel loss of 10 L/km (liters per kilometer)
-	 */
-	int fuelLoss;
+	private int fuelLeft;
 	/**
 	 * Predicted Flight Time Left (minutes)
 	 */
-	int timeLeft;
+	private int timeLeft;
 	/**
 	 * Plane average speed of 100 km/h (kilometers per hour)
 	 */
-	int speed;
+	private int speed;
 	/**
 	 * Current Distance Left (km)
 	 */
 	int distanceLeft;
-	int bid;
-	int moneyAvailable;
+	private int bid;
+	private int moneyAvailable;
 	String name;
 	boolean finished = false;
 	boolean comm = false;
@@ -49,7 +45,7 @@ public class Plane extends Agent {
 	protected static int cidCnt = 0;
 	Queue<String> route = new LinkedList<>();
 	private HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
-	HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
+	private HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
 	String[][] traffic = new String[5][5];
 	AMSAgentDescription[] agents = null;
 	AID myID;
@@ -57,14 +53,13 @@ public class Plane extends Agent {
 	HashMap<String, Integer> moveToPos = new HashMap<String, Integer>();
 	public boolean conflict = false;
 	boolean firstIterationOver = false;
-
 	/**
 	 * Numerical value that is attached to a particular attribute's level. A higher
 	 * value is generally related to more attractiveness.
 	 */
 	LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes = new LinkedHashMap<>();
 	ContractNetResponderAgent responder;
-
+	
 	/**
 	 * Initialize Plane's Attributes.
 	 */
@@ -75,20 +70,19 @@ public class Plane extends Agent {
 
 		if (name.equals("Coop")) {
 			PlaneCoop plane = new PlaneCoop();
-			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getFuelLoss(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
 			initPlaneWeights(plane, plane.getDistanceLeft());
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
-			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getFuelLoss(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
 			initPlaneWeights(plane, plane.getDistanceLeft());
 		}
 	}
 
-	private void initPlaneArgs(HashMap<String, Integer> actualPos, HashMap<String, Integer> finalPos, int fuelLeft, int fuelLoss, int timeLeft, int bid, Queue<String> route, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
+	private void initPlaneArgs(HashMap<String, Integer> actualPos, HashMap<String, Integer> finalPos, int fuelLeft, int timeLeft, int bid, Queue<String> route, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
 		this.actualPos = actualPos;
 		this.finalPos = finalPos;
 		this.fuelLeft = fuelLeft;
-		this.fuelLoss = fuelLoss;
 		this.timeLeft = timeLeft;
 		this.bid = bid;
 		this.route = route;
@@ -100,7 +94,6 @@ public class Plane extends Agent {
 
 
 	private void initPlaneWeights(PlanePersonality plane, Integer distanceLeft) {
-
 		LinkedHashMap<Integer, Double> fuelWeights = ContractNetResponderAgent.generateWeight(plane.getFuelLeft(), 0, 1);
 		this.negotiationAttributes.put("fuel", fuelWeights);
 
@@ -112,205 +105,6 @@ public class Plane extends Agent {
 
 		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(distanceLeft*2, 0 , 1);
 		this.negotiationAttributes.put("detour", detourWeights);
-	}
-
-	private void recalculateDistanceWeights(int possibleDistance) {
-		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(possibleDistance, 0 , 1);
-		this.negotiationAttributes.replace("detour", detourWeights);
-	}
-
-
-
-	protected double proposalUtility(HashMap<String, Double> proposalWeights, HashMap<String, Double> currentWeights) {
-		double utility = 0;
-		double proposalCost = 0;
-		double currentCost  = 0;
-
-		for (Entry<String, Double> weightPair : proposalWeights.entrySet()){
-			String category = weightPair.getKey();
-			proposalCost += weightPair.getValue();
-			currentCost += currentWeights.get(category);
-		}
-
-		utility = currentCost - proposalCost;
-
-		return utility;
-	}
-
-	/**
-	 * 
-	 * @param action
-	 * @return
-	 */
-	protected double calcDealCost(HashMap<Integer, Double> action) {
-		double sumCost = 0;
-/*
-		for (Entry<Integer, Double> actionItem : action.entrySet()) {
-			sumCost += valueNormalizationFuncion(actionItem.getKey(), min, max) * actionItem.getValue();
-		}
-*/
-		return sumCost;
-	}
-
-	String evaluateActions(ArrayList<String> proposals) {
-
-		HashMap<String, Double> currentWeights = this.calculateCurrentWeights();
-		Pair<String, Double> bestProposal = new Pair<>(null, 0.0);
-
-		for (String proposal : proposals) {
-
-			HashMap<String, Double> proposalWeights = this.calculateProposalWeights(proposal);
-			double proposalUtility = this.proposalUtility(proposalWeights, currentWeights);
-
-			if(bestProposal.getValue() < proposalUtility)
-				bestProposal = new Pair<>(proposal, proposalUtility);
-
-		}
-
-		return bestProposal.getFirst();
-	}
-
-	double calculateStateWeight(String attribute, int value) {
-		LinkedHashMap<Integer, Double> attributeWeights =  negotiationAttributes.get(attribute);
-
-		for (Integer index: attributeWeights.keySet()) {
-
-			if(Math.ceil(value) == index)
-				return attributeWeights.get(index) * value;
-		}
-		return -1;
-	}
-
-	HashMap<String, Double> calculateCurrentWeights() {
-		HashMap<String, Double> currentWeights = new HashMap<String, Double>();
-
-		currentWeights.put("fuel", calculateStateWeight("fuel", fuelLeft));
-
-		currentWeights.put("money", calculateStateWeight("money", moneyAvailable));
-
-		currentWeights.put("time", calculateStateWeight("time", timeLeft));
-
-		currentWeights.put("detour", calculateStateWeight("detour", distanceLeft));
-
-		return currentWeights;
-	}
-
-	HashMap<String, Double> calculateProposalWeights(String proposal) {
-		int tempMoney = moneyAvailable;
-
-		if (proposal.contains("Payment")) {
-			int paymentIndex = proposal.lastIndexOf(' ')+1;
-			int paidMoney = Integer.parseInt(proposal.substring(paymentIndex));
-			tempMoney -= paidMoney;
-		}
-
-		HashMap<String, Double> proposalWeights = new HashMap<>();
-
-		proposalWeights.put("fuel", calculateStateWeight("fuel", fuelLeft - fuelLoss));
-
-		proposalWeights.put("money", calculateStateWeight("money", tempMoney));
-
-		proposalWeights.put("time",  calculateStateWeight("time", timeLeft - 1 / speed));
-
-		//new distance left
-		int newRouteLength = createPossibleRoute(proposal, finalPos.get("x"), finalPos.get("y"));
-		this.recalculateDistanceWeights(newRouteLength);
-		proposalWeights.put("detour", calculateStateWeight("detour", newRouteLength));
-
-		return proposalWeights;
-	}
-
-
-	protected int createPossibleRoute(String proposal, int xf, int yf) {
-
-		int xi = calculatePosition(proposal).getFirst();
-		int yi = calculatePosition(proposal).getSecond();
-
-		Node node = Util.findPath(traffic.length, xi, yi, xf, yf);
-
-		Stack<HashMap<String, Integer>> routeCoords = new Stack<>();
-
-		if (node != null) {
-			return Util.printPath(node) - 1;
-
-		} else {
-			return -1;
-		}
-	}
-
-	protected Pair<Integer, Integer> calculatePosition(String proposal) {
-
-		int xi = actualPos.get("x");
-		int yi = actualPos.get("y");
-
-		switch (proposal){
-			case "U":
-				yi-=1;
-				break;
-			case "D":
-				yi+=1;
-				break;
-			case "R":
-				xi+=1;
-				break;
-			case "L":
-				xi-=1;
-				break;
-			case "DDR":
-				xi+=1;
-				yi+=1;
-				break;
-			case "DDL":
-				xi-=1;
-				yi+=1;
-				break;
-			case "DUR":
-				xi+=1;
-				yi-=1;
-				break;
-			case "DUL":
-				xi-=1;
-				yi-=1;
-				break;
-		}
-
-		return new Pair<Integer, Integer>(xi, yi);
-	}
-
-
-	/**
-	 * 
-	 * @return
-	 */
-	ArrayList<String> createActionMessages() {
-		ArrayList<String> proposals = new ArrayList<String>();
-		String proposal;
-		ArrayList<String> possibleMoves = new ArrayList<String>() {
-			{
-				add("U");
-				add("D");
-				add("R");
-				add("L");
-				add("DDR");
-				add("DDL");
-				add("DUR");
-				add("DUL");
-			}
-		};
-
-		for (int i = 0; i < possibleMoves.size(); i++) {
-			proposal = "Agent " + this.getLocalName() + ": Proposes Move " + possibleMoves.get(i);
-			if (possibleMoves.get(i).equals(route.element())) {
-				proposal += " and Payment " + bid;
-			}
-			proposals.add(proposal);
-		}
-
-		/*for (int i = 0; i < proposals.size(); i++) {
-			System.out.println(proposals.get(i));
-		}*/
-
-		return proposals;
 	}
 
 	/**
@@ -328,8 +122,6 @@ public class Plane extends Agent {
 
 		addBehaviour(fsm);
 
-		ArrayList<String> proposals = createActionMessages();
-		String chosenProposal = evaluateActions(proposals);
 	}
 
 	protected Behaviour negotiationBehaviour(String type) {
@@ -518,4 +310,61 @@ public class Plane extends Agent {
 	public void setRoute(Queue<String> route) {
 		this.route = route;
 	}
+
+	public int getBid() {
+		return bid;
+	}
+
+	public void setBid(int bid) {
+		this.bid = bid;
+	}
+
+	public int getFuelLeft() {
+		return fuelLeft;
+	}
+
+	public void setFuelLeft(int fuelLeft) {
+		this.fuelLeft = fuelLeft;
+	}
+	
+	public LinkedHashMap<String, LinkedHashMap<Integer, Double>> getNegotiationAttributes() {
+		return negotiationAttributes;
+	}
+	
+	public void setNegotiationAttributes(LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes) {
+		this.negotiationAttributes = negotiationAttributes;
+	}
+
+	public int getMoneyAvailable() {
+		return moneyAvailable;
+	}
+
+	public void setMoneyAvailable(int moneyAvailable) {
+		this.moneyAvailable = moneyAvailable;
+	}
+
+	public int getTimeLeft() {
+		return timeLeft;
+	}
+
+	public void setTimeLeft(int timeLeft) {
+		this.timeLeft = timeLeft;
+	}
+
+	public int getSpeed() {
+		return speed;
+	}
+
+	public void setSpeed(int speed) {
+		this.speed = speed;
+	}
+
+	public HashMap<String, Integer> getFinalPos() {
+		return finalPos;
+	}
+
+	public void setFinalPos(HashMap<String, Integer> finalPos) {
+		this.finalPos = finalPos;
+	}
+
 }
