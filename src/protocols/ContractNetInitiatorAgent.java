@@ -21,7 +21,8 @@ import java.util.List;
 public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	private Agent agent;
 	private ACLMessage cfp;
-	private int nResponders;
+	private int nResponders = Util.nResponders;
+	private int handledResponders = 0;
 
 	public ContractNetInitiatorAgent(Agent a, ACLMessage cfp) {
 		super(a, cfp);
@@ -37,15 +38,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		System.out.println("****************************\n");
 		System.out.println(this.cfp.getContent());
 	}
-
-	public int getNumberResponders() {
-		return nResponders;
-	}
-
-	public void setNumberResponders(int nResponders) {
-		this.nResponders = nResponders;
-	}
-
+	
 	public Vector prepareCfps(ACLMessage cfp) {
 		Vector v = new Vector(1);
 		v.addElement(this.cfp);
@@ -73,10 +66,10 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	}
 
 	protected void handleAllResponses(Vector responses, Vector acceptances) {
-		if (responses.size() < Util.nResponders) {
+		if (responses.size() < nResponders) {
 			// Some responder didn't reply within the specified timeout
 			System.out.println("Waiting for more proposals....");
-		} 
+		}
 		// Evaluate proposals.
 		int counter = 0;
 		double bestProposal = -1;
@@ -105,7 +98,6 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		}
 		
 		if (equilibrium) {
-			System.out.println("Equilibrium");
 			e = responses.elements();
 			
 			while (e.hasMoreElements()) {
@@ -117,7 +109,6 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 				}
 			}
 		} else {
-			System.out.println("No equilibrium");
 			e = responses.elements();
 			
 			while (e.hasMoreElements()) {
@@ -167,6 +158,12 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 
 		tempTraffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = inform.getSender().getLocalName();
 		((ATC)getAgent()).setTraffic(tempTraffic);
+		
+		handledResponders++;
+		
+		if (handledResponders == nResponders) {
+			((ATC)getAgent()).manageBehaviour("centralized");
+		}
 	}
 	
 	protected void evaluateProposals() {

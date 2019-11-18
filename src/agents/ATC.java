@@ -53,7 +53,6 @@ public class ATC extends Agent {
 		}
 		
 		Util.mapSize = traffic.length;
-		printTraffic();
 		
 		if(!GraphicInterface.started)
 			GraphicInterface.start(traffic);
@@ -89,7 +88,7 @@ public class ATC extends Agent {
 		}
 	}
 
-	protected void manageBehaviour(String type) {
+	public void manageBehaviour(String type) {
 		if (type.equals("centralized")) {
 			FSMBehaviour fsm = new FSMBehaviour(this);
 
@@ -97,7 +96,8 @@ public class ATC extends Agent {
 			fsm.registerLastState(negotiationBehaviour(), "Negotiation State");
 
 			fsm.registerDefaultTransition("Move State", "Negotiation State");
-
+			fsm.registerDefaultTransition("Negotiation State", "Move State");
+			
 			addBehaviour(fsm);
 		} else if (type.equals("decentralized")) {
 			addBehaviour(moveBehaviour());

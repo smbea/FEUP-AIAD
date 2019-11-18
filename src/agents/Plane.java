@@ -112,13 +112,15 @@ public class Plane extends Agent {
 	 * with ATC and decentralized Air Traffic, i.e., planes communicate and negotiate
 	 * with each other.
 	 */
-	protected void manageBehaviour(String type) {
+	public void manageBehaviour(String type) {
 		FSMBehaviour fsm = new FSMBehaviour(this);
 
 		fsm.registerFirstState(moveBehaviour(), "Move State");
 		fsm.registerLastState(negotiationBehaviour(type), "Negotiation State");
 
 		fsm.registerDefaultTransition("Move State", "Negotiation State");
+
+		fsm.registerDefaultTransition("Negotiation State", "Move State");
 
 		addBehaviour(fsm);
 

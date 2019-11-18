@@ -23,6 +23,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	Agent agent;
 	MessageTemplate mt;
 	String type;
+	ArrayList<String> proposals;
 	
 	public ContractNetResponderAgent(Agent a, MessageTemplate mt, String type) {
 		super(a, mt);
@@ -42,7 +43,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		System.out.println("Agent " + agent.getLocalName() + ": CFP received from " + cfp.getSender().getName()
 				+ ". Action is '" + cfp.getContent() + "'");
 
-		ArrayList<String> proposals = createActionMessages();
+		proposals = createActionMessages();
+		
 		Pair<String, Double> chosenProposal = evaluateActions(proposals);
 		String proposal = chosenProposal.getFirst() + " with Utility=" + chosenProposal.getValue();
 	
@@ -72,6 +74,9 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			inform.setContent("Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
 					+ ((Plane)getAgent()).getActualPos().get("x") + ", " + ((Plane)getAgent()).getActualPos().get("y") + "]' successfully performed");
 			System.out.println(inform.getContent());
+			
+			((Plane)getAgent()).manageBehaviour("centralized");
+			
 			return inform;
 		} else {
 			System.out.println("Agent " + agent.getLocalName() + ": Action execution failed");
@@ -81,6 +86,18 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 
 	protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
 		System.out.println("Agent " + agent.getLocalName() + ": Proposal rejected");
+	
+		Pair<String, Double> chosenProposal = evaluateActions(proposals);
+		String proposal = chosenProposal.getFirst() + " with Utility=" + chosenProposal.getValue();
+	
+		if (chosenProposal != null) {
+			// We provide a proposal
+			System.out.println();
+			System.out.println("Agent " + agent.getLocalName() + ": Proposing " + proposal);
+			ACLMessage reply = reject.createReply();
+			reply.setPerformative(ACLMessage.PROPOSE);
+			reply.setContent(proposal);
+		}
 	}
 
 	private boolean performAction(String msg) {
@@ -197,7 +214,6 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		Pair<String, Double> bestProposal = new Pair<>(null, 0.0);
 
 		for (String proposal : proposals) {
-
 			HashMap<String, Double> proposalWeights = this.calculateProposalWeights(proposal);
 			
 			if (proposalWeights == null) {
@@ -208,9 +224,14 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 
 			if(bestProposal.getValue() < proposalUtility)
 				bestProposal = new Pair<>(proposal, proposalUtility);
-
 		}
-
+		
+		for (int index = 0; index < proposals.size(); index++) {
+			if (proposals.get(index).equals(bestProposal.getFirst())) {
+				proposals.remove(index);
+			}
+		}
+		
 		return bestProposal;
 	}
 
