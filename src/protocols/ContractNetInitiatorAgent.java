@@ -167,8 +167,6 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 
 		tempTraffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = inform.getSender().getLocalName();
 		((ATC)getAgent()).setTraffic(tempTraffic);
-		
-		((ATC)getAgent()).printTraffic();
 	}
 	
 	protected void evaluateProposals() {

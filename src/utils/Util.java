@@ -260,8 +260,6 @@ public class Util {
 		int xi = actualPos.get("x");
 		int yi = actualPos.get("y");
 
-		System.out.println("recebe " + proposal);
-		
 		if(proposal.contains("Move down right")) {
 			xi+=1;
 			yi+=1;
