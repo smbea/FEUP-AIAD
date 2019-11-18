@@ -260,15 +260,9 @@ public class Util {
 		int xi = actualPos.get("x");
 		int yi = actualPos.get("y");
 
-		if (proposal.contains("Move up")) {
-			yi-=1;
-		} else if (proposal.contains("Move down")) {
-			yi+=1;
-		} else if (proposal.contains("Move right")) {
-			xi+=1;
-		} else if (proposal.contains("Move left")) {
-			xi-=1;
-		} else if (proposal.contains("Move down right")) {
+		System.out.println("recebe " + proposal);
+		
+		if(proposal.contains("Move down right")) {
 			xi+=1;
 			yi+=1;
 		} else if (proposal.contains("Move down left")) {
@@ -280,6 +274,14 @@ public class Util {
 		} else if (proposal.contains("Move top left")) {
 			xi-=1;
 			yi-=1;
+		} else if (proposal.contains("Move up")) {
+			yi-=1;
+		} else if (proposal.contains("Move down")) {
+			yi+=1;
+		} else if (proposal.contains("Move right")) {
+			xi+=1;
+		} else if (proposal.contains("Move left")) {
+			xi-=1;
 		} else {
 			return null;
 		}

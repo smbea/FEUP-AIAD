@@ -4,6 +4,8 @@ import jade.core.Agent;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
+import swinginterface.GraphicInterface;
+import swinginterface.GraphicsDemo;
 import utils.Pair;
 import utils.Util;
 
@@ -71,10 +73,10 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	}
 
 	protected void handleAllResponses(Vector responses, Vector acceptances) {
-		if (responses.size() < nResponders) {
+		if (responses.size() < Util.nResponders) {
 			// Some responder didn't reply within the specified timeout
-			System.out.println("Timeout expired: missing " + (nResponders - responses.size()) + " responses");
-		}
+			System.out.println("Waiting for more proposals....");
+		} 
 		// Evaluate proposals.
 		int counter = 0;
 		double bestProposal = -1;
@@ -115,6 +117,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 				}
 			}
 		} else {
+			System.out.println("No equilibrium");
 			e = responses.elements();
 			
 			while (e.hasMoreElements()) {
@@ -144,6 +147,28 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 
 	protected void handleInform(ACLMessage inform) {
 		System.out.println("Agent " + inform.getSender().getName() + " successfully performed the requested action");
+		int index = inform.getContent().indexOf("[");
+		int finalIndex = inform.getContent().indexOf("]");
+		String[] coord = inform.getContent().substring(index + 1, finalIndex).split(", ");
+		String[][] tempTraffic = ((ATC)getAgent()).getTraffic();
+		
+		for (int i = 0; i < ((ATC)getAgent()).getTraffic().length; i++) {
+			for (int j = 0; j < ((ATC)getAgent()).getTraffic().length; j++) {
+				if (((ATC)getAgent()).getTraffic()[i][j] != "null") {
+					if (((ATC)getAgent()).getTraffic()[i][j].equals(inform.getSender().getLocalName())) {
+						tempTraffic[i][j] = "null";
+					}
+				}
+			}
+		}
+
+		if (GraphicsDemo.instance != null && GraphicInterface.started)
+			GraphicsDemo.instance.setTraffic(tempTraffic);
+
+		tempTraffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = inform.getSender().getLocalName();
+		((ATC)getAgent()).setTraffic(tempTraffic);
+		
+		((ATC)getAgent()).printTraffic();
 	}
 	
 	protected void evaluateProposals() {

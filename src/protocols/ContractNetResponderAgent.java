@@ -69,7 +69,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		if (performAction(propose.getContent())) {
 			ACLMessage inform = accept.createReply();
 			inform.setPerformative(ACLMessage.INFORM);
-			inform.setContent("Agent " + agent.getLocalName() + ": Action successfully performed");
+			inform.setContent("Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
+					+ ((Plane)getAgent()).getActualPos().get("x") + ", " + ((Plane)getAgent()).getActualPos().get("y") + "]' successfully performed");
 			System.out.println(inform.getContent());
 			return inform;
 		} else {
@@ -89,9 +90,12 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			HashMap<String, Integer> positionHash = new HashMap<>();
 			positionHash.put("x", position.getFirst());
 			positionHash.put("y", position.getSecond());
+			int distance = ((Plane)getAgent()).getDistanceLeft() - 1; 
 			
-			Util.move(this.getAgent().getLocalName(), positionHash, ((Plane)this.getAgent()).getDistanceLeft());
-			
+			// move
+			((Plane)getAgent()).setActualPos(positionHash);
+			((Plane)getAgent()).setDistanceLeft(distance);
+
 			return true;
 		}
 		

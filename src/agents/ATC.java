@@ -80,7 +80,7 @@ public class ATC extends Agent {
 				
 		}
 
-	protected void printTraffic() {
+	public void printTraffic() {
 		for (int i = 0; i < traffic.length; i++) {
 			for (int j = 0; j < traffic[i].length; j++) {
 				System.out.print(traffic[i][j] + " ");
@@ -221,7 +221,7 @@ public class ATC extends Agent {
 						if (GraphicsDemo.instance != null && GraphicInterface.started)
 							GraphicsDemo.instance.setTraffic(traffic);
 
-						traffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = msg.getSender()
+							traffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = msg.getSender()
 								.getLocalName();
 					} else {
 						System.out.println(msg.getContent());
@@ -302,5 +302,9 @@ public class ATC extends Agent {
 
 	public String[][] getTraffic() {
 		return traffic;
+	}
+
+	public void setTraffic(String[][] traffic) {
+		this.traffic = traffic;
 	}
 }
