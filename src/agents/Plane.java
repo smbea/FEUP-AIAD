@@ -155,11 +155,12 @@ public class Plane extends Agent {
 			 */
 			public boolean isOver() {
 				if (checkPosition()) {
-					fsm.deregisterState("Negotiation Behaviour");
-					fsm.deregisterState("Move Behaviour");
 					fsm.deregisterDefaultTransition("Negotiation Behaviour");
 					fsm.deregisterDefaultTransition("Move Behaviour");
-					
+					fsm.deregisterState("Negotiation Behaviour");
+					fsm.deregisterState("Move Behaviour");
+
+					System.out.println("Destination reached for Plane " + getLocalName() + "! Hope you had a good flight :)");
 					stop();
 					return true;
 				}
