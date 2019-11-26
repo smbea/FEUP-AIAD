@@ -40,13 +40,6 @@ public class PlaneCoop
 	 * A higher value is generally related to more attractiveness.
 	 */
 	HashMap<String, LinkedHashMap<Double, Double>> negotiationAttributes = new HashMap<String, LinkedHashMap<Double, Double>>() {{
-		// minimize amount of money spent
-		put("money", new LinkedHashMap<Double, Double>() {{
-			put(30.0, 0.05); // nadir alternative value
-			put(29.0, 0.15);  // upper limit for barely acceptable
-			put(1.0, 0.3);   // lower limit of ideal values
-			put(0.0, 0.5);    // ideal alternative value
-		}});
 		// maximize amount of fuel
 		put("fuel", new LinkedHashMap<Double, Double>() {{
 			put(4000.0, 0.5);          // ideal alternative value
@@ -68,11 +61,14 @@ public class PlaneCoop
 			put(1.0, 0.3);
 			put(0.0, 0.5);
 		}});
+		// minimize amount of money spent
+		put("money", new LinkedHashMap<Double, Double>() {{
+			put(30.0, 0.05); // nadir alternative value
+			put(29.0, 0.15);  // upper limit for barely acceptable
+			put(1.0, 0.3);   // lower limit of ideal values
+			put(0.0, 0.5);    // ideal alternative value
+		}});
 	}};
 	
 	public PlaneCoop() {}
-	
-	/**
-	 * CRIAR FUNÇÃO DE ASSIGN DE PESO
-	 */
 } 

@@ -30,6 +30,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		this.agent = a;
 		this.mt = mt;
 		this.type = type;
+		
+		System.out.println("hi im " + a.getLocalName());
 	}
 
 	/**
@@ -74,6 +76,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			inform.setContent("Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
 					+ ((Plane)getAgent()).getActualPos().get("x") + ", " + ((Plane)getAgent()).getActualPos().get("y") + "]' successfully performed");
 			System.out.println(inform.getContent());
+			
+			Util.confirmedConflictCounter--;
 			
 			((Plane)getAgent()).manageBehaviour("centralized");
 			

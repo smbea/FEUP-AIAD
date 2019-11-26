@@ -141,7 +141,4 @@ public class PlanePersonality {
     public void setFinalPos(HashMap<String, Integer> finalPos) {
         this.finalPos = finalPos;
     }
-
 }
-
-

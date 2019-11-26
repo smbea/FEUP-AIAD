@@ -53,6 +53,8 @@ public class Plane extends Agent {
 	HashMap<String, Integer> moveToPos = new HashMap<String, Integer>();
 	public boolean conflict = false;
 	boolean firstIterationOver = false;
+	FSMBehaviour fsm = new FSMBehaviour();
+	
 	/**
 	 * Numerical value that is attached to a particular attribute's level. A higher
 	 * value is generally related to more attractiveness.
@@ -65,23 +67,27 @@ public class Plane extends Agent {
 	 */
 	protected void argCreation() {
 		Object[] args = getArguments();
-		name = getLocalName();
-		method = (String) args[0];
+		String[] splited = ((String) args[0]).split(" ");
 
-		if (name.equals("Coop")) {
+		name = getLocalName();
+		method = splited[0];
+		actualPos.put("x", Integer.parseInt(splited[1]));
+		actualPos.put("y", Integer.parseInt(splited[2]));
+		finalPos.put("x", Integer.parseInt(splited[3]));
+		finalPos.put("y", Integer.parseInt(splited[4]));
+
+		if (!name.equals("ATC") && !name.equals("rma") && !name.equals("ams") && !name.equals("df")) {
 			PlaneCoop plane = new PlaneCoop();
-			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
 			initPlaneWeights(plane, plane.getDistanceLeft());
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
-			initPlaneArgs(plane.getActualPos(), plane.getFinalPos(), plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
 			initPlaneWeights(plane, plane.getDistanceLeft());
 		}
 	}
 
-	private void initPlaneArgs(HashMap<String, Integer> actualPos, HashMap<String, Integer> finalPos, int fuelLeft, int timeLeft, int bid, Queue<String> route, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
-		this.actualPos = actualPos;
-		this.finalPos = finalPos;
+	private void initPlaneArgs(int fuelLeft, int timeLeft, int bid, Queue<String> route, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
 		this.fuelLeft = fuelLeft;
 		this.timeLeft = timeLeft;
 		this.bid = bid;
@@ -106,6 +112,10 @@ public class Plane extends Agent {
 		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(distanceLeft*2, 0 , 1);
 		this.negotiationAttributes.put("detour", detourWeights);
 	}
+	
+	public boolean checkPosition() {
+		return (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y"));
+	}
 
 	/**
 	 * Implements Centralized Air Traffic, i.e., planes communicate and negotiate
@@ -113,17 +123,16 @@ public class Plane extends Agent {
 	 * with each other.
 	 */
 	public void manageBehaviour(String type) {
-		FSMBehaviour fsm = new FSMBehaviour(this);
-
-		fsm.registerFirstState(moveBehaviour(), "Move State");
-		fsm.registerLastState(negotiationBehaviour(type), "Negotiation State");
-
-		fsm.registerDefaultTransition("Move State", "Negotiation State");
-
-		fsm.registerDefaultTransition("Negotiation State", "Move State");
-
-		addBehaviour(fsm);
-
+		if (!checkPosition()) {
+			fsm.registerFirstState(moveBehaviour(), "Move State");
+			fsm.registerLastState(negotiationBehaviour(type), "Negotiation State");
+	
+			fsm.registerDefaultTransition("Move State", "Negotiation State");
+	
+			fsm.registerDefaultTransition("Negotiation State", "Move State");
+	
+			addBehaviour(fsm);
+		}
 	}
 
 	protected Behaviour negotiationBehaviour(String type) {
@@ -145,6 +154,15 @@ public class Plane extends Agent {
 			 * Plane arrived at destiny
 			 */
 			public boolean isOver() {
+				if (checkPosition()) {
+					fsm.deregisterState("Negotiation Behaviour");
+					fsm.deregisterState("Move Behaviour");
+					fsm.deregisterDefaultTransition("Negotiation Behaviour");
+					fsm.deregisterDefaultTransition("Move Behaviour");
+					
+					stop();
+					return true;
+				}
 				if (Util.confirmedConflictCounter == Util.nResponders) {
 					stop();
 					return true;
@@ -217,7 +235,7 @@ public class Plane extends Agent {
 			 * Plane arrived at destiny
 			 */
 			public boolean isOver() {
-				if (Util.confirmedConflictCounter == Util.nResponders) {
+				if (Util.confirmedConflictCounter != 0 || (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y"))) {
 					stop();
 					return true;
 				}
@@ -231,10 +249,11 @@ public class Plane extends Agent {
 					answer = blockingReceive();
 
 					if (answer.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
-						System.out.println("Conflict detected! Agent " + getAgent().getLocalName()
-								+ " is starting negotiations...");
-
+						//System.out.println("Conflict detected! Agent " + getAgent().getLocalName() + " is starting negotiations...");
+						
 						Util.confirmedConflictCounter++;
+						
+						System.out.println("Agent = " + getAgent().getLocalName() + ", Conflict counter " + Util.confirmedConflictCounter);
 					} else if (answer.getPerformative() == ACLMessage.CFP) {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
