@@ -147,7 +147,6 @@ public class Plane extends Agent {
 	}
 
 	protected Behaviour moveBehaviour() {
-		System.out.println("speed = " + speed);
 		return (new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000000) {
 			/**
 			 * Plane arrived at destiny
@@ -172,6 +171,7 @@ public class Plane extends Agent {
 
 			@Override
 			protected void onTick() {
+				System.out.println("haha");
 				if (!isOver()) {
 					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
 					answer = blockingReceive();

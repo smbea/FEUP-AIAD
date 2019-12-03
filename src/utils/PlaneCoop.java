@@ -22,8 +22,6 @@ public class PlaneCoop extends PlanePersonality
 		super.speed = this.speed;
 		super.moneyAvailable = this.moneyAvailable;
 		super.bid = this.bid;
-		this.actualPos = new HashMap<String, Integer>(){{put("x", 0);put("y", 0);}};
-		this.finalPos = new HashMap<String, Integer>(){{put("x", 4);put("y", 4);}};
 	}
 
 } 
