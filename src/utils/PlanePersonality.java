@@ -9,11 +9,11 @@ public class PlanePersonality {
     /**
      * Fuel Left (liters)
      */
-    int fuelLeft = 50;
+    int fuelLeft;
     /**
      * Plane average speed of 100 km/h (kilometers per hour)
      */
-    int speed = 100;
+    int speed;
     /**
      * Plane average total fuel loss of 10 L/km (liters per kilometer)
      */
@@ -26,7 +26,7 @@ public class PlanePersonality {
     /**
      * Money available to spend
      */
-    int moneyAvailable = 30;
+    int moneyAvailable;
 
     /**
      * Maximum delay allowed is 2 times the current estimated flight time
@@ -34,22 +34,18 @@ public class PlanePersonality {
     int maxDelay = 2*timeLeft;
 
     /**
-     * Current flight route
-     */
-    Queue<String> route =new LinkedList<>();
-
-    /**
      * Current position coordinates
      */
     HashMap<String, Integer> actualPos;
 
     /**
-     * Destiny position coordinates
+     * Destination position coordinates
      */
     HashMap<String, Integer> finalPos;
-
-    int distanceLeft = getRoute().size();
-
+    /**
+     * Distance left (km)
+     */
+    int distanceLeft = 0;
     int bid=10;
 
     public PlanePersonality() { }
@@ -116,14 +112,6 @@ public class PlanePersonality {
 
     public void setDistanceLeft(int distanceLeft) {
         this.distanceLeft = distanceLeft;
-    }
-
-    public Queue<String> getRoute() {
-        return route;
-    }
-
-    public void setRoute(Queue<String> route) {
-        this.route = route;
     }
 
     public HashMap<String, Integer> getActualPos() {

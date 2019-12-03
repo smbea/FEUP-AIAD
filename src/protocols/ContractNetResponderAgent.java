@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.Stack;
 import java.util.Map.Entry;
 
 import agents.Plane;
@@ -24,6 +25,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	MessageTemplate mt;
 	String type;
 	ArrayList<String> proposals;
+	HashMap<String, Integer> nextMove;
 	
 	public ContractNetResponderAgent(Agent a, MessageTemplate mt, String type) {
 		super(a, mt);
@@ -31,7 +33,10 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		this.mt = mt;
 		this.type = type;
 		
-		System.out.println("hi im " + a.getLocalName());
+		Stack<HashMap<String, Integer>> route = Util.routes.get(a.getLocalName());
+		nextMove = route.peek();
+		
+		System.out.println("hi im " + a.getLocalName() + " " + nextMove);
 	}
 
 	/**
@@ -187,9 +192,9 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			
 			proposal = ((Plane)this.getAgent()).getLocalName() + ": Move " + move;
 
-			if (possibleMoves.get(i).equals(((Plane)getAgent()).getRoute().element())) {
+			/*if (possibleMoves.get(i).equals(((Plane)getAgent()).getRoute().element())) {
 				proposal += " and Payment " + ((Plane)getAgent()).getBid();
-			}
+			}*/
 			proposals.add(proposal);
 		}
 

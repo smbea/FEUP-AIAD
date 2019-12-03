@@ -43,7 +43,6 @@ public class Plane extends Agent {
 	String cidBase;
 	String method;
 	protected static int cidCnt = 0;
-	Queue<String> route = new LinkedList<>();
 	private HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
 	private HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
 	String[][] traffic = new String[5][5];
@@ -76,22 +75,21 @@ public class Plane extends Agent {
 		finalPos.put("x", Integer.parseInt(splited[3]));
 		finalPos.put("y", Integer.parseInt(splited[4]));
 
-		if (!name.equals("ATC") && !name.equals("rma") && !name.equals("ams") && !name.equals("df")) {
+		if (name.equals("Coop")) {
 			PlaneCoop plane = new PlaneCoop();
-			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
 			initPlaneWeights(plane, plane.getDistanceLeft());
 		} else if (name.equals("Comp")) {
 			PlaneComp plane = new PlaneComp();
-			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getRoute(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
+			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
 			initPlaneWeights(plane, plane.getDistanceLeft());
 		}
 	}
 
-	private void initPlaneArgs(int fuelLeft, int timeLeft, int bid, Queue<String> route, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
+	private void initPlaneArgs(int fuelLeft, int timeLeft, int bid, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
 		this.fuelLeft = fuelLeft;
 		this.timeLeft = timeLeft;
 		this.bid = bid;
-		this.route = route;
 		this.distanceLeft = distanceLeft;
 		this.speed = speed;
 		this.moneyAvailable = moneyAvailable;
@@ -149,7 +147,8 @@ public class Plane extends Agent {
 	}
 
 	protected Behaviour moveBehaviour() {
-		return (new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000) {
+		System.out.println("speed = " + speed);
+		return (new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000000) {
 			/**
 			 * Plane arrived at destiny
 			 */
@@ -195,6 +194,11 @@ public class Plane extends Agent {
 							e.printStackTrace();
 						}
 					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
+						if (answer.getContent().contains("Route_Generated")) {
+							int index = answer.getContent().indexOf(':');
+							distanceLeft = Integer.parseInt(answer.getContent().substring(index+1));
+							((Plane)getAgent()).setDistanceLeft(distanceLeft);
+						}
 						Util.move(this.getAgent().getLocalName(), actualPos, distanceLeft);
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -317,20 +321,12 @@ public class Plane extends Agent {
 		return distanceLeft;
 	}
 	
-	public Queue<String> getRoute() {
-		return route;
-	}
-
 	public void setActualPos(HashMap<String, Integer> actualPos) {
 		this.actualPos = actualPos;
 	}
 	
 	public void setDistanceLeft(int distanceLeft) {
 		this.distanceLeft = distanceLeft;
-	}
-	
-	public void setRoute(Queue<String> route) {
-		this.route = route;
 	}
 
 	public int getBid() {

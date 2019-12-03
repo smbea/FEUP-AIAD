@@ -58,26 +58,28 @@ public class ATC extends Agent {
 			GraphicInterface.start(traffic);
 	}
 
-	protected void createRoute(String agent, int xi, int yi, int xf, int yf) {
-		String[][] route = new String[5][5];
-				
+	protected int createRoute(String agent, int xi, int yi, int xf, int yf) {
+		int len = -1;
 		Node node = Util.findPath(xi, yi, xf, yf);
 				
 		Stack<HashMap<String, Integer>> routeCoords = new Stack<HashMap<String, Integer>>();
 
 		if (node != null) {
-					System.out.println("Agent " + this.getLocalName() + " is generating a route ....");
-					System.out.print("Shortest path is: ");
-					int len = Util.printPath(node) - 1;
-					Util.saveRoute(node, routeCoords);
-					System.out.println("\nShortest path length is " + len);
-					
-					Util.routes.put(agent, routeCoords);
-				} else {
-					System.out.println("Destination not found");
-				}
-				
+			System.out.println("Agent " + this.getLocalName() + " is generating a route ....");
+			System.out.print("Shortest path is: ");
+			
+			len = Util.printPath(node) - 1;
+			Util.saveRoute(node, routeCoords);
+			
+			System.out.println("\nShortest path length is " + len);	
+			
+			Util.routes.put(agent, routeCoords);
+		} else {
+			System.out.println("Destination not found");
 		}
+		
+		return len;			
+	}
 
 	public void printTraffic() {
 		for (int i = 0; i < traffic.length; i++) {
@@ -166,12 +168,12 @@ public class ATC extends Agent {
 						finalIndex = content.lastIndexOf("]");
 						String[] coordFinal = content.substring(index + 1, finalIndex).split(", ");
 
-						createRoute(msg.getSender().getLocalName(), Integer.parseInt(coordInit[0]), Integer.parseInt(coordInit[1]),
+						int len = createRoute(msg.getSender().getLocalName(), Integer.parseInt(coordInit[0]), Integer.parseInt(coordInit[1]),
 								Integer.parseInt(coordFinal[0]), Integer.parseInt(coordFinal[1]));
 
 						ACLMessage reply = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-						reply.setContent("Accepting initial move '" + content + "' from responder "
-								+ msg.getSender().getLocalName());
+						reply.setContent("Route_Created: Generated route for" + msg.getSender().getLocalName()
+								+ " with distance=" + len);
 						reply.addReceiver(msg.getSender());
 						send(reply);
 					} else if (msg.getPerformative() == ACLMessage.PROPOSE
