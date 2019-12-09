@@ -36,12 +36,12 @@ public class PlanePersonality {
     /**
      * Current position coordinates
      */
-    HashMap<String, Integer> actualPos;
+    Pair<Integer, Integer> actualPos;
 
     /**
      * Destination position coordinates
      */
-    HashMap<String, Integer> finalPos;
+    Pair<Integer, Integer> finalPos;
     /**
      * Distance left (km)
      */
@@ -114,19 +114,19 @@ public class PlanePersonality {
         this.distanceLeft = distanceLeft;
     }
 
-    public HashMap<String, Integer> getActualPos() {
+    public Pair<Integer, Integer> getActualPos() {
         return actualPos;
     }
 
-    public void setActualPos(HashMap<String, Integer> actualPos) {
+    public void setActualPos(Pair<Integer, Integer> actualPos) {
         this.actualPos = actualPos;
     }
 
-    public HashMap<String, Integer> getFinalPos() {
+    public Pair<Integer, Integer> getFinalPos() {
         return finalPos;
     }
 
-    public void setFinalPos(HashMap<String, Integer> finalPos) {
+    public void setFinalPos(Pair<Integer, Integer> finalPos) {
         this.finalPos = finalPos;
     }
 }

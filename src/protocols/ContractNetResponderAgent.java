@@ -52,6 +52,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 
 		proposals = createActionMessages();
 		
+		System.out.println("proposals " + proposals);
+		
 		Pair<String, Double> chosenProposal = evaluateActions(proposals);
 		String proposal = chosenProposal.getFirst() + " with Utility=" + chosenProposal.getValue();
 	
@@ -79,7 +81,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			ACLMessage inform = accept.createReply();
 			inform.setPerformative(ACLMessage.INFORM);
 			inform.setContent("Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
-					+ ((Plane)getAgent()).getPlane().getActualPos().get("x") + ", " + ((Plane)getAgent()).getPlane().getActualPos().get("y") + "]' successfully performed");
+					+ ((Plane)getAgent()).getPlane().getActualPos().getFirst() + ", " + ((Plane)getAgent()).getPlane().getActualPos().getSecond() + "]' successfully performed");
 			System.out.println(inform.getContent());
 			
 			Util.confirmedConflictCounter--;
@@ -113,13 +115,10 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		Pair<Integer, Integer> position = Util.calculatePosition(msg, ((Plane)getAgent()).getPlane().getActualPos());
 		
 		if (position != null) {
-			HashMap<String, Integer> positionHash = new HashMap<>();
-			positionHash.put("x", position.getFirst());
-			positionHash.put("y", position.getSecond());
 			int distance = ((Plane)getAgent()).getPlane().getDistanceLeft() - 1; 
 			
 			// move
-			((Plane)getAgent()).setActualPos(positionHash);
+			((Plane)getAgent()).setActualPos(position);
 			((Plane)getAgent()).setDistanceLeft(distance);
 
 			return true;
@@ -176,25 +175,26 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		String proposal;
 		ArrayList<String> possibleMoves = new ArrayList<String>() {
 			{
-				add("U");
-				add("D");
-				add("R");
-				add("L");
-				add("DDR");
-				add("DDL");
-				add("DUR");
-				add("DUL");
+				add("MU");
+				add("MD");
+				add("MR");
+				add("ML");
+				add("MDR");
+				add("MDL");
+				add("MUR");
+				add("MUL");
 			}
 		};
 
 		for (int i = 0; i < possibleMoves.size(); i++) {
 			String move = Util.parseMove(possibleMoves.get(i));
+			Pair<Integer, Integer> pos = Util.calculatePosition(possibleMoves.get(i), ((Plane)getAgent()).getPlane().getActualPos());
 			
 			proposal = ((Plane)this.getAgent()).getLocalName() + ": Move " + move;
 
-			/*if (possibleMoves.get(i).equals(((Plane)getAgent()).getRoute().element())) {
-				proposal += " and Payment " + ((Plane)getAgent()).getBid();
-			}*/
+			if (pos.getFirst() == nextMove.get("x") && pos.getSecond() == nextMove.get("y")) {
+				proposal += " and Payment " + ((Plane)getAgent()).getPlane().getBid();
+			}
 			proposals.add(proposal);
 		}
 
@@ -288,7 +288,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		proposalWeights.put("time",  calculateStateWeight("time", ((Plane)getAgent()).getPlane().getTimeLeft() - 1 / ((Plane)getAgent()).getPlane().getSpeed()));
 
 		//new distance left
-		int newRouteLength = Util.createPossibleRoute(proposal, ((Plane)getAgent()).getPlane().getActualPos(), ((Plane)getAgent()).getPlane().getFinalPos().get("x"), ((Plane)getAgent()).getPlane().getFinalPos().get("y"));
+		int newRouteLength = Util.createPossibleRoute(proposal, ((Plane)getAgent()).getPlane().getActualPos(), ((Plane)getAgent()).getPlane().getFinalPos().getFirst(), ((Plane)getAgent()).getPlane().getFinalPos().getSecond());
 		
 		if (newRouteLength != -1) {
 			this.recalculateDistanceWeights(newRouteLength);

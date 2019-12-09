@@ -29,17 +29,16 @@ public class Util {
 		return cidBase + (cidCnt++);
 	}
 
-	public static void move(String agentName, HashMap<String, Integer> actualPos, int distanceLeft) {
+	public static void move(String agentName, PlanePersonality plane) {
 		Stack<HashMap<String, Integer>> route = routes.get(agentName);
 		HashMap<String, Integer> nextMove = route.pop();
 		
-		if (nextMove.get("x") == actualPos.get("x") && nextMove.get("y") == actualPos.get("y")) {
+		if (nextMove.get("x") == plane.getActualPos().getFirst() && nextMove.get("y") == plane.getActualPos().getSecond()) {
 			nextMove = route.pop();
 		}
-		distanceLeft--;
-		
-		actualPos.replace("x", nextMove.get("x"));
-		actualPos.replace("y", nextMove.get("y"));
+
+		plane.setActualPos(new Pair<>(nextMove.get("x"), nextMove.get("y")));
+		plane.setDistanceLeft(plane.getDistanceLeft()-1);
 	}
 
 	public static boolean checkConflict(String[] actualPos, String[][] traffic, String name) {
@@ -233,7 +232,7 @@ public class Util {
 		return null;
 	}
 	
-	public static int createPossibleRoute(String proposal, HashMap<String, Integer> actualPos, int xf, int yf) {
+	public static int createPossibleRoute(String proposal, Pair<Integer, Integer> actualPos, int xf, int yf) {
 		Pair<Integer, Integer> position = calculatePosition(proposal, actualPos);
 		
 		if (position != null) {
@@ -250,29 +249,29 @@ public class Util {
 		return -1;
 	}
 
-	public static Pair<Integer, Integer> calculatePosition(String proposal, HashMap<String, Integer> actualPos) {
-		int xi = actualPos.get("x");
-		int yi = actualPos.get("y");
+	public static Pair<Integer, Integer> calculatePosition(String proposal, Pair<Integer, Integer> actualPos) {
+		int xi = actualPos.getFirst();
+		int yi = actualPos.getSecond();
 
-		if(proposal.contains("Move down right")) {
+		if(proposal.contains("Move down right") || proposal.contains("MDR")) {
 			xi+=1;
 			yi+=1;
-		} else if (proposal.contains("Move down left")) {
+		} else if (proposal.contains("Move down left") || proposal.contains("MDL")) {
 			xi-=1;
 			yi+=1;
-		} else if (proposal.contains("Move top right")) {
+		} else if (proposal.contains("Move top right") || proposal.contains("MUR")) {
 			xi+=1;
 			yi-=1;
-		} else if (proposal.contains("Move top left")) {
+		} else if (proposal.contains("Move top left") || proposal.contains("MUL")) {
 			xi-=1;
 			yi-=1;
-		} else if (proposal.contains("Move up")) {
+		} else if (proposal.contains("Move up") || proposal.contains("MU")) {
 			yi-=1;
-		} else if (proposal.contains("Move down")) {
+		} else if (proposal.contains("Move down") || proposal.contains("MD")) {
 			yi+=1;
-		} else if (proposal.contains("Move right")) {
+		} else if (proposal.contains("Move right") || proposal.contains("MR")) {
 			xi+=1;
-		} else if (proposal.contains("Move left")) {
+		} else if (proposal.contains("Move left") || proposal.contains("ML")) {
 			xi-=1;
 		} else {
 			return null;
@@ -289,28 +288,28 @@ public class Util {
 		String move = null;
 		
 		switch(moveCode) {
-		case "U":
+		case "MU":
 			move = "up";
 			break;
-		case "D":
+		case "MD":
 			move = "down";
 			break;
-		case "L":
+		case "ML":
 			move = "left";
 			break;
-		case "R":
+		case "MR":
 			move = "right";
 			break;
-		case "DDR":
+		case "MDR":
 			move = "down right";
 			break;
-		case "DDL":
+		case "MDL":
 			move = "down left";
 			break;
-		case "DUL":
+		case "MUL":
 			move = "top left";
 			break;
-		case "DUR":
+		case "MUR":
 			move = "top right";
 			break;
 		default:
@@ -325,28 +324,28 @@ public class Util {
 		
 		switch(move) {
 		case "up":
-			moveCode = "U";
+			moveCode = "MU";
 			break;
 		case "down":
-			moveCode = "D";
+			moveCode = "MD";
 			break;
 		case "left":
-			moveCode = "L";
+			moveCode = "ML";
 			break;
 		case "right":
-			moveCode = "R";
+			moveCode = "MR";
 			break;
 		case "down right":
-			moveCode = "DDR";
+			moveCode = "MDR";
 			break;
 		case "down left":
-			moveCode = "DDL";
+			moveCode = "MDL";
 			break;
 		case "top left":
-			moveCode = "DUL";
+			moveCode = "MUL";
 			break;
 		case "top right":
-			moveCode = "DUR";
+			moveCode = "MUR";
 			break;
 		default:
 			break;
@@ -355,16 +354,11 @@ public class Util {
 		return moveCode;
 	}
 	
-	public static HashMap<String, Integer> findAgentMap(String agent, String[][] traffic) {
+	public static Pair<Integer, Integer> findAgentMap(String agent, String[][] traffic) {
 		for (int i = 0; i < traffic.length; i++) {
 			for (int j = 0; j < traffic.length; j++) {
 				if (traffic[i][j].equals(agent)) {
-					HashMap<String, Integer> coord = new HashMap<String, Integer>();
-					
-					coord.put("x", i);
-					coord.put("y", j);
-					
-					return coord;
+					return new Pair<>(i, j);
 				}
 			}
 		}

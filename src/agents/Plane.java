@@ -12,8 +12,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import protocols.ContractNetResponderAgent;
 import utils.*;
-import utils.PlaneComp;
-import utils.PlaneCoop;
 
 @SuppressWarnings("serial")
 public class Plane extends Agent {
@@ -39,7 +37,7 @@ public class Plane extends Agent {
 		return plane;
 	}
 	
-	public void setActualPos(HashMap<String, Integer> actualPos) {
+	public void setActualPos(Pair<Integer, Integer> actualPos) {
 		plane.setActualPos(actualPos);
 	}
 	
@@ -60,9 +58,9 @@ public class Plane extends Agent {
 	 */
 	protected void argCreation() {
 		Object[] args = getArguments();
-		HashMap<String, Integer> actualPos = new HashMap<>();
-		HashMap<String, Integer> finalPos = new HashMap<>();
 		String[] splited = ((String) args[0]).split(" ");
+		Pair<Integer, Integer> actualPos = new Pair<>(Integer.parseInt(splited[1]), Integer.parseInt(splited[2]));
+		Pair<Integer, Integer> finalPos = new Pair<>(Integer.parseInt(splited[3]), Integer.parseInt(splited[4]));
 
 		name = getLocalName();
 		method = splited[0];
@@ -73,10 +71,7 @@ public class Plane extends Agent {
 			plane = new PlaneComp();
 		}
 		
-		actualPos.put("x", Integer.parseInt(splited[1]));
-		actualPos.put("y", Integer.parseInt(splited[2]));
-		finalPos.put("x", Integer.parseInt(splited[3]));
-		finalPos.put("y", Integer.parseInt(splited[4]));
+
 		
 		plane.setActualPos(actualPos);
 		plane.setFinalPos(finalPos);
@@ -113,7 +108,7 @@ public class Plane extends Agent {
 	}
 	
 	public boolean checkPosition() {
-		return (plane.getActualPos().get("x") == plane.getFinalPos().get("x") && plane.getActualPos().get("y") == plane.getFinalPos().get("y"));
+		return (plane.getActualPos().getFirst() == plane.getFinalPos().getFirst() && plane.getActualPos().getSecond() == plane.getFinalPos().getSecond());
 	}
 
 	/**
@@ -172,7 +167,6 @@ public class Plane extends Agent {
 
 			@Override
 			protected void onTick() {
-				System.out.println("on tick");
 				if (!isOver()) {
 					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
 					answer = blockingReceive();
@@ -186,8 +180,8 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Route: Agent Plane " + this.getAgent().getLocalName()
-									+ " is requesting route from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
-									+ "] to [" + plane.getFinalPos().get("x") + ", " + plane.getFinalPos().get("y") + "]");
+									+ " is requesting route from [" + plane.getActualPos().getFirst() + ", " + plane.getActualPos().getSecond()
+									+ "] to [" + plane.getFinalPos().getFirst() + ", " + plane.getFinalPos().getSecond() + "]");
 							msg.addReceiver(getAID("control"));
 							send(msg);
 							System.out.println(msg.getContent());
@@ -200,11 +194,11 @@ public class Plane extends Agent {
 							int distanceLeft = Integer.parseInt(answer.getContent().substring(index+1));
 							plane.setDistanceLeft(distanceLeft);
 						}
-						Util.move(this.getAgent().getLocalName(), plane.getActualPos(), plane.getDistanceLeft());
+						Util.move(this.getAgent().getLocalName(), plane);
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
-									+ plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y") + "]' successfully performed");
+									+ plane.getActualPos().getFirst() + ", " + plane.getActualPos().getSecond() + "]' successfully performed");
 							msg.addReceiver(getAID("control"));
 							send(msg);
 							System.out.println(msg.getContent());
@@ -219,7 +213,7 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName()
-									+ " is proposing move from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
+									+ " is proposing move from [" + plane.getActualPos().getFirst() + ", " + plane.getActualPos().getSecond()
 									+ "] according to route");
 							msg.addReceiver(getAID("control"));
 							send(msg);
@@ -241,7 +235,7 @@ public class Plane extends Agent {
 			 * Plane arrived at destiny
 			 */
 			public boolean isOver() {
-				if (Util.confirmedConflictCounter != 0 || (plane.getActualPos().get("x") == plane.getFinalPos().get("x") && plane.getActualPos().get("y") == plane.getFinalPos().get("y"))) {
+				if (Util.confirmedConflictCounter != 0 || (plane.getActualPos().getFirst() == plane.getFinalPos().getFirst() && plane.getActualPos().getSecond() == plane.getFinalPos().getSecond())) {
 					stop();
 					return true;
 				}
@@ -264,7 +258,7 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Map: Agent Plane " + this.getAgent().getLocalName()
-									+ " is proposing move from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
+									+ " is proposing move from [" + plane.getActualPos().getFirst() + ", " + plane.getActualPos().getSecond()
 									+ "] according to route");
 							msg.addReceiver(getAID("control"));
 							send(msg);
@@ -273,11 +267,11 @@ public class Plane extends Agent {
 							e.printStackTrace();
 						}
 					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
-						Util.move(this.getAgent().getLocalName(), plane.getActualPos(), plane.getDistanceLeft());
+						Util.move(this.getAgent().getLocalName(), plane);
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
-									+ plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y") + "]' successfully performed");
+									+ plane.getActualPos().getFirst() + ", " + plane.getActualPos().getSecond() + "]' successfully performed");
 							msg.addReceiver(getAID("control"));
 							send(msg);
 							System.out.println(msg.getContent());
@@ -292,7 +286,7 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName()
-									+ " is proposing move from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
+									+ " is proposing move from [" + plane.getActualPos().getFirst() + ", " + plane.getActualPos().getSecond()
 									+ "] according to route");
 							msg.addReceiver(getAID("control"));
 							send(msg);
