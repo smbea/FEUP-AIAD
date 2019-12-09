@@ -79,7 +79,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			ACLMessage inform = accept.createReply();
 			inform.setPerformative(ACLMessage.INFORM);
 			inform.setContent("Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
-					+ ((Plane)getAgent()).getActualPos().get("x") + ", " + ((Plane)getAgent()).getActualPos().get("y") + "]' successfully performed");
+					+ ((Plane)getAgent()).getPlane().getActualPos().get("x") + ", " + ((Plane)getAgent()).getPlane().getActualPos().get("y") + "]' successfully performed");
 			System.out.println(inform.getContent());
 			
 			Util.confirmedConflictCounter--;
@@ -110,13 +110,13 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	}
 
 	private boolean performAction(String msg) {
-		Pair<Integer, Integer> position = Util.calculatePosition(msg, ((Plane)getAgent()).getActualPos());
+		Pair<Integer, Integer> position = Util.calculatePosition(msg, ((Plane)getAgent()).getPlane().getActualPos());
 		
 		if (position != null) {
 			HashMap<String, Integer> positionHash = new HashMap<>();
 			positionHash.put("x", position.getFirst());
 			positionHash.put("y", position.getSecond());
-			int distance = ((Plane)getAgent()).getDistanceLeft() - 1; 
+			int distance = ((Plane)getAgent()).getPlane().getDistanceLeft() - 1; 
 			
 			// move
 			((Plane)getAgent()).setActualPos(positionHash);
@@ -258,19 +258,19 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	HashMap<String, Double> calculateCurrentWeights() {
 		HashMap<String, Double> currentWeights = new HashMap<String, Double>();
 
-		currentWeights.put("fuel", calculateStateWeight("fuel", ((Plane)getAgent()).getFuelLeft()));
+		currentWeights.put("fuel", calculateStateWeight("fuel", ((Plane)getAgent()).getPlane().getFuelLeft()));
 
-		currentWeights.put("money", calculateStateWeight("money", ((Plane)getAgent()).getMoneyAvailable()));
+		currentWeights.put("money", calculateStateWeight("money", ((Plane)getAgent()).getPlane().getMoneyAvailable()));
 
-		currentWeights.put("time", calculateStateWeight("time", ((Plane)getAgent()).getTimeLeft()));
+		currentWeights.put("time", calculateStateWeight("time", ((Plane)getAgent()).getPlane().getTimeLeft()));
 
-		currentWeights.put("detour", calculateStateWeight("detour", ((Plane)getAgent()).getDistanceLeft()));
+		currentWeights.put("detour", calculateStateWeight("detour", ((Plane)getAgent()).getPlane().getDistanceLeft()));
 
 		return currentWeights;
 	}
 
 	HashMap<String, Double> calculateProposalWeights(String proposal) {
-		int tempMoney = ((Plane)getAgent()).getMoneyAvailable();
+		int tempMoney = ((Plane)getAgent()).getPlane().getMoneyAvailable();
 
 		if (proposal.contains("Payment")) {
 			int paymentIndex = proposal.indexOf("Payment")+8;
@@ -281,14 +281,14 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 
 		HashMap<String, Double> proposalWeights = new HashMap<>();
 
-		proposalWeights.put("fuel", calculateStateWeight("fuel", ((Plane)getAgent()).getFuelLeft() - Util.fuelLoss));
+		proposalWeights.put("fuel", calculateStateWeight("fuel", ((Plane)getAgent()).getPlane().getFuelLeft() - ((Plane)getAgent()).getPlane().getFuelLoss()));
 
 		proposalWeights.put("money", calculateStateWeight("money", tempMoney));
 
-		proposalWeights.put("time",  calculateStateWeight("time", ((Plane)getAgent()).getTimeLeft() - 1 / ((Plane)getAgent()).getSpeed()));
+		proposalWeights.put("time",  calculateStateWeight("time", ((Plane)getAgent()).getPlane().getTimeLeft() - 1 / ((Plane)getAgent()).getPlane().getSpeed()));
 
 		//new distance left
-		int newRouteLength = Util.createPossibleRoute(proposal, ((Plane)getAgent()).getActualPos(), ((Plane)getAgent()).getFinalPos().get("x"), ((Plane)getAgent()).getFinalPos().get("y"));
+		int newRouteLength = Util.createPossibleRoute(proposal, ((Plane)getAgent()).getPlane().getActualPos(), ((Plane)getAgent()).getPlane().getFinalPos().get("x"), ((Plane)getAgent()).getPlane().getFinalPos().get("y"));
 		
 		if (newRouteLength != -1) {
 			this.recalculateDistanceWeights(newRouteLength);

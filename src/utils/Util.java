@@ -11,13 +11,7 @@ import java.util.Stack;
 
 public class Util {
 	private static int movementCost = 200;
-	/**
-	 * Plane average total fuel loss of 10 L/km (liters per kilometer)
-	 */
-	public static int fuelLoss = 10;
 	private static HashMap<String, String> conflicts = new HashMap<String, String>();
-	private static String initiator = "null";
-	private static String responder = "null";
 	public static boolean conflict = false;
 	public static int confirmedConflictCounter = 0;
 	public static int nResponders;
@@ -392,21 +386,5 @@ public class Util {
 
 	public static void setMovementCost(int movementCost) {
 		Util.movementCost = movementCost;
-	}
-
-	public static String getInitiator() {
-		return initiator;
-	}
-
-	public static void setInitiator(String initiator) {
-		Util.initiator = initiator;
-	}
-
-	public static String getResponder() {
-		return responder;
-	}
-
-	public static void setResponder(String responder) {
-		Util.responder = responder;
 	}
 }

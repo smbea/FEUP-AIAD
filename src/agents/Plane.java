@@ -17,42 +17,16 @@ import utils.PlaneCoop;
 
 @SuppressWarnings("serial")
 public class Plane extends Agent {
-	/**
-	 * Fuel Left (liters)
-	 */
-	private int fuelLeft;
-	/**
-	 * Predicted Flight Time Left (minutes)
-	 */
-	private int timeLeft;
-	/**
-	 * Plane average speed of 100 km/h (kilometers per hour)
-	 */
-	private int speed;
-	/**
-	 * Current Distance Left (km)
-	 */
-	int distanceLeft;
-	private int bid;
-	private int moneyAvailable;
-	String name;
-	boolean finished = false;
-	boolean comm = false;
-	boolean negot = false;
+	private String name;
+	private PlanePersonality plane;
 	public String conflictPlane = "none";
-	String cidBase;
-	String method;
+	private String cidBase;
+	private String method;
 	protected static int cidCnt = 0;
-	private HashMap<String, Integer> actualPos = new HashMap<String, Integer>();
-	private HashMap<String, Integer> finalPos = new HashMap<String, Integer>();
-	String[][] traffic = new String[5][5];
-	AMSAgentDescription[] agents = null;
-	AID myID;
-	int maxDelay;
-	HashMap<String, Integer> moveToPos = new HashMap<String, Integer>();
-	public boolean conflict = false;
-	boolean firstIterationOver = false;
-	FSMBehaviour fsm = new FSMBehaviour();
+	private AMSAgentDescription[] agents = null;
+	private AID myID;
+	private boolean firstIterationOver = false;
+	private FSMBehaviour fsm = new FSMBehaviour();
 	
 	/**
 	 * Numerical value that is attached to a particular attribute's level. A higher
@@ -61,43 +35,56 @@ public class Plane extends Agent {
 	LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes = new LinkedHashMap<>();
 	ContractNetResponderAgent responder;
 	
+	public PlanePersonality getPlane() {
+		return plane;
+	}
+	
+	public void setActualPos(HashMap<String, Integer> actualPos) {
+		plane.setActualPos(actualPos);
+	}
+	
+	public void setDistanceLeft(int distanceLeft) {
+		plane.setDistanceLeft(distanceLeft);
+	}
+	
+	public LinkedHashMap<String, LinkedHashMap<Integer, Double>> getNegotiationAttributes() {
+		return negotiationAttributes;
+	}
+	
+	public void setNegotiationAttributes(LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes) {
+		this.negotiationAttributes = negotiationAttributes;
+	}
+	
 	/**
 	 * Initialize Plane's Attributes.
 	 */
 	protected void argCreation() {
 		Object[] args = getArguments();
+		HashMap<String, Integer> actualPos = new HashMap<>();
+		HashMap<String, Integer> finalPos = new HashMap<>();
 		String[] splited = ((String) args[0]).split(" ");
 
 		name = getLocalName();
 		method = splited[0];
+		
+		if (name.equals("Coop")) {
+			plane = new PlaneCoop();
+		} else if (name.equals("Comp")) {
+			plane = new PlaneComp();
+		}
+		
 		actualPos.put("x", Integer.parseInt(splited[1]));
 		actualPos.put("y", Integer.parseInt(splited[2]));
 		finalPos.put("x", Integer.parseInt(splited[3]));
 		finalPos.put("y", Integer.parseInt(splited[4]));
-
-		if (name.equals("Coop")) {
-			PlaneCoop plane = new PlaneCoop();
-			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
-			initPlaneWeights(plane, plane.getDistanceLeft());
-		} else if (name.equals("Comp")) {
-			PlaneComp plane = new PlaneComp();
-			initPlaneArgs(plane.getFuelLeft(), plane.getTimeLeft(), plane.getBid(), plane.getDistanceLeft(), plane.getSpeed(), plane.getMoneyAvailable(), plane.getMaxDelay());
-			initPlaneWeights(plane, plane.getDistanceLeft());
-		}
+		
+		plane.setActualPos(actualPos);
+		plane.setFinalPos(finalPos);
+		
+		initPlaneWeights();
 	}
 
-	private void initPlaneArgs(int fuelLeft, int timeLeft, int bid, int distanceLeft, int speed, int moneyAvailable, int maxDelay) {
-		this.fuelLeft = fuelLeft;
-		this.timeLeft = timeLeft;
-		this.bid = bid;
-		this.distanceLeft = distanceLeft;
-		this.speed = speed;
-		this.moneyAvailable = moneyAvailable;
-		this.maxDelay = maxDelay;
-	}
-
-
-	private void initPlaneWeights(PlanePersonality plane, Integer distanceLeft) {
+	private void initPlaneWeights() {
 		LinkedHashMap<Integer, Double> fuelWeights = ContractNetResponderAgent.generateWeight(plane.getFuelLeft(), 0, 1);
 		this.negotiationAttributes.put("fuel", fuelWeights);
 
@@ -107,12 +94,26 @@ public class Plane extends Agent {
 		LinkedHashMap<Integer, Double> timeWeights = ContractNetResponderAgent.generateWeight(plane.getMaxDelay(), 0 , 1);
 		this.negotiationAttributes.put("time", timeWeights);
 
-		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(distanceLeft*2, 0 , 1);
+		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(plane.getDistanceLeft()*2, 0 , 1);
 		this.negotiationAttributes.put("detour", detourWeights);
 	}
 	
+	private void updatePlaneWeights() {
+		LinkedHashMap<Integer, Double> fuelWeights = ContractNetResponderAgent.generateWeight(plane.getFuelLeft(), 0, 1);
+		this.negotiationAttributes.replace("fuel", fuelWeights);
+
+		LinkedHashMap<Integer, Double> moneyWeights = ContractNetResponderAgent.generateWeight(plane.getMoneyAvailable(), 0 , 1);
+		this.negotiationAttributes.replace("money", moneyWeights);
+
+		LinkedHashMap<Integer, Double> timeWeights = ContractNetResponderAgent.generateWeight(plane.getMaxDelay(), 0 , 1);
+		this.negotiationAttributes.replace("time", timeWeights);
+
+		LinkedHashMap<Integer, Double> detourWeights = ContractNetResponderAgent.generateWeight(plane.getDistanceLeft()*2, 0 , 1);
+		this.negotiationAttributes.replace("detour", detourWeights);
+	}
+	
 	public boolean checkPosition() {
-		return (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y"));
+		return (plane.getActualPos().get("x") == plane.getFinalPos().get("x") && plane.getActualPos().get("y") == plane.getFinalPos().get("y"));
 	}
 
 	/**
@@ -128,7 +129,7 @@ public class Plane extends Agent {
 			fsm.registerDefaultTransition("Move State", "Negotiation State");
 	
 			fsm.registerDefaultTransition("Negotiation State", "Move State");
-	
+			
 			addBehaviour(fsm);
 		}
 	}
@@ -147,7 +148,7 @@ public class Plane extends Agent {
 	}
 
 	protected Behaviour moveBehaviour() {
-		return (new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000000) {
+		return (new TickerBehaviour(this, (Util.getMovementCost() / plane.getSpeed()) * 1000) {
 			/**
 			 * Plane arrived at destiny
 			 */
@@ -171,7 +172,7 @@ public class Plane extends Agent {
 
 			@Override
 			protected void onTick() {
-				System.out.println("haha");
+				System.out.println("on tick");
 				if (!isOver()) {
 					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
 					answer = blockingReceive();
@@ -185,8 +186,8 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Route: Agent Plane " + this.getAgent().getLocalName()
-									+ " is requesting route from [" + actualPos.get("x") + ", " + actualPos.get("y")
-									+ "] to [" + finalPos.get("x") + ", " + finalPos.get("y") + "]");
+									+ " is requesting route from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
+									+ "] to [" + plane.getFinalPos().get("x") + ", " + plane.getFinalPos().get("y") + "]");
 							msg.addReceiver(getAID("control"));
 							send(msg);
 							System.out.println(msg.getContent());
@@ -196,14 +197,14 @@ public class Plane extends Agent {
 					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
 						if (answer.getContent().contains("Route_Generated")) {
 							int index = answer.getContent().indexOf(':');
-							distanceLeft = Integer.parseInt(answer.getContent().substring(index+1));
-							((Plane)getAgent()).setDistanceLeft(distanceLeft);
+							int distanceLeft = Integer.parseInt(answer.getContent().substring(index+1));
+							plane.setDistanceLeft(distanceLeft);
 						}
-						Util.move(this.getAgent().getLocalName(), actualPos, distanceLeft);
+						Util.move(this.getAgent().getLocalName(), plane.getActualPos(), plane.getDistanceLeft());
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
-									+ actualPos.get("x") + ", " + actualPos.get("y") + "]' successfully performed");
+									+ plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y") + "]' successfully performed");
 							msg.addReceiver(getAID("control"));
 							send(msg);
 							System.out.println(msg.getContent());
@@ -218,7 +219,7 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName()
-									+ " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y")
+									+ " is proposing move from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
 									+ "] according to route");
 							msg.addReceiver(getAID("control"));
 							send(msg);
@@ -235,12 +236,12 @@ public class Plane extends Agent {
 	}
 	
 	protected Behaviour moveDecentralizedBehaviour() {
-		return (new TickerBehaviour(this, (Util.getMovementCost() / speed) * 1000) {
+		return (new TickerBehaviour(this, (Util.getMovementCost() / plane.getSpeed()) * 1000) {
 			/**
 			 * Plane arrived at destiny
 			 */
 			public boolean isOver() {
-				if (Util.confirmedConflictCounter != 0 || (actualPos.get("x") == finalPos.get("x") && actualPos.get("y") == finalPos.get("y"))) {
+				if (Util.confirmedConflictCounter != 0 || (plane.getActualPos().get("x") == plane.getFinalPos().get("x") && plane.getActualPos().get("y") == plane.getFinalPos().get("y"))) {
 					stop();
 					return true;
 				}
@@ -263,7 +264,7 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Map: Agent Plane " + this.getAgent().getLocalName()
-									+ " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y")
+									+ " is proposing move from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
 									+ "] according to route");
 							msg.addReceiver(getAID("control"));
 							send(msg);
@@ -272,11 +273,11 @@ public class Plane extends Agent {
 							e.printStackTrace();
 						}
 					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
-						Util.move(this.getAgent().getLocalName(), actualPos, distanceLeft);
+						Util.move(this.getAgent().getLocalName(), plane.getActualPos(), plane.getDistanceLeft());
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 							msg.setContent("Execute_Move: Agent " + getAgent().getLocalName() + "'s Action 'Move to ["
-									+ actualPos.get("x") + ", " + actualPos.get("y") + "]' successfully performed");
+									+ plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y") + "]' successfully performed");
 							msg.addReceiver(getAID("control"));
 							send(msg);
 							System.out.println(msg.getContent());
@@ -291,7 +292,7 @@ public class Plane extends Agent {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName()
-									+ " is proposing move from [" + actualPos.get("x") + ", " + actualPos.get("y")
+									+ " is proposing move from [" + plane.getActualPos().get("x") + ", " + plane.getActualPos().get("y")
 									+ "] according to route");
 							msg.addReceiver(getAID("control"));
 							send(msg);
@@ -312,77 +313,4 @@ public class Plane extends Agent {
 		
 		manageBehaviour(method);
 	}
-
-	public HashMap<String, Integer> getActualPos() {
-		return actualPos;
-	}
-	
-	public int getDistanceLeft() {
-		return distanceLeft;
-	}
-	
-	public void setActualPos(HashMap<String, Integer> actualPos) {
-		this.actualPos = actualPos;
-	}
-	
-	public void setDistanceLeft(int distanceLeft) {
-		this.distanceLeft = distanceLeft;
-	}
-
-	public int getBid() {
-		return bid;
-	}
-
-	public void setBid(int bid) {
-		this.bid = bid;
-	}
-
-	public int getFuelLeft() {
-		return fuelLeft;
-	}
-
-	public void setFuelLeft(int fuelLeft) {
-		this.fuelLeft = fuelLeft;
-	}
-	
-	public LinkedHashMap<String, LinkedHashMap<Integer, Double>> getNegotiationAttributes() {
-		return negotiationAttributes;
-	}
-	
-	public void setNegotiationAttributes(LinkedHashMap<String, LinkedHashMap<Integer, Double>> negotiationAttributes) {
-		this.negotiationAttributes = negotiationAttributes;
-	}
-
-	public int getMoneyAvailable() {
-		return moneyAvailable;
-	}
-
-	public void setMoneyAvailable(int moneyAvailable) {
-		this.moneyAvailable = moneyAvailable;
-	}
-
-	public int getTimeLeft() {
-		return timeLeft;
-	}
-
-	public void setTimeLeft(int timeLeft) {
-		this.timeLeft = timeLeft;
-	}
-
-	public int getSpeed() {
-		return speed;
-	}
-
-	public void setSpeed(int speed) {
-		this.speed = speed;
-	}
-
-	public HashMap<String, Integer> getFinalPos() {
-		return finalPos;
-	}
-
-	public void setFinalPos(HashMap<String, Integer> finalPos) {
-		this.finalPos = finalPos;
-	}
-
 }
