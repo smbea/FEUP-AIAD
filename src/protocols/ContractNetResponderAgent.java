@@ -220,19 +220,18 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 	Pair<String, Double> evaluateActions(ArrayList<String> proposals) {
 
 		HashMap<String, Double> currentWeights = this.calculateCurrentWeights();
-		Pair<String, Double> bestProposal = new Pair<>(null, 0.0);
+		Pair<String, Double> bestProposal = new Pair<>(null, Double.NEGATIVE_INFINITY);
 
 		for (String proposal : proposals) {
 			HashMap<String, Double> proposalWeights = this.calculateProposalWeights(proposal);
 			
-			if (proposalWeights == null) {
-				return null;
+			if (proposalWeights != null) {
+				double proposalUtility = this.proposalUtility(proposalWeights, currentWeights);
+	
+				if (bestProposal.getValue() < proposalUtility) {
+					bestProposal = new Pair<>(proposal, proposalUtility);
+				}
 			}
-			
-			double proposalUtility = this.proposalUtility(proposalWeights, currentWeights);
-
-			if(bestProposal.getValue() < proposalUtility)
-				bestProposal = new Pair<>(proposal, proposalUtility);
 		}
 		
 		for (int index = 0; index < proposals.size(); index++) {
