@@ -13,6 +13,7 @@ public class Util {
 	private static int movementCost = 200;
 	private static HashMap<String, String> conflicts = new HashMap<String, String>();
 	public static boolean conflict = false;
+	public static boolean negotiation = false;
 	public static int confirmedConflictCounter = 0;
 	public static int nResponders;
 	public static HashMap<String, Stack<HashMap<String, Integer>>> routes = new HashMap<String, Stack<HashMap<String, Integer>>>();
@@ -248,6 +249,7 @@ public class Util {
 			System.out.println("Agent " + agentName + " is generating a new route ....");
 			System.out.print("Shortest path is: ");
 			Util.printPath(node);
+			System.out.println();
 	
 			return 0;
 		}

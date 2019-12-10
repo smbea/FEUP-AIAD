@@ -30,6 +30,8 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		this.cfp = cfp;
 
 		this.cfp.setContent("Start: Agent " + agent.getLocalName() + " is requesting proposals");
+		
+		Util.negotiation = true;
 
 		System.out.println("\n****************************");
 		System.out.println("***                      ***");
@@ -125,6 +127,8 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 						bestProposer = msg.getSender();
 						accept = reply;
 					}
+					
+					((ATC)getAgent()).manageBehaviour("centralized");
 				}
 			}
 			
@@ -162,12 +166,8 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		handledResponders++;
 		
 		if (handledResponders == nResponders) {
+			Util.negotiation = false;
 			((ATC)getAgent()).manageBehaviour("centralized");
 		}
 	}
-	
-	protected void evaluateProposals() {
-		
-	}
-
 }

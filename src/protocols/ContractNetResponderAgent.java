@@ -81,10 +81,7 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			System.out.println(inform.getContent());
 			
 			Util.confirmedConflictCounter--;
-			
-			if (Util.confirmedConflictCounter == 0) {
-				Util.conflict = false;
-			}
+			Util.conflict = false;
 			
 			((Plane)getAgent()).manageBehaviour("centralized");
 			
@@ -97,16 +94,18 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 
 	protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
 		System.out.println("Agent " + agent.getLocalName() + ": Proposal rejected");
-	
+		
+		((Plane)agent).manageBehaviour("centralized");
+	/*
 		Pair<String, Double> chosenProposal = evaluateActions(proposals);
 		String proposal = chosenProposal.getFirst() + " with Utility=" + chosenProposal.getValue();
 	
 		// We provide a proposal
-		System.out.println();
-		System.out.println("Agent " + agent.getLocalName() + ": Proposing " + proposal);
 		ACLMessage reply = reject.createReply();
 		reply.setPerformative(ACLMessage.PROPOSE);
 		reply.setContent(proposal);
+		
+		System.out.println("Agent " + agent.getLocalName() + ": Proposing " + reply.getContent());*/
 	}
 
 	private boolean performAction(String msg) {

@@ -189,7 +189,7 @@ public class ATC extends Agent {
 									+ msg.getSender().getLocalName());
 							reply.addReceiver(msg.getSender());
 							send(reply);
-						} else {
+						} else if (!Util.negotiation) {
 							Util.conflict = true;
 							ACLMessage reply = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
 							reply.setContent("Conflict");
