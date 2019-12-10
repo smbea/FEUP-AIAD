@@ -192,8 +192,10 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			
 			proposal = ((Plane)this.getAgent()).getLocalName() + ": Move " + move;
 
-			if (pos.getFirst() == nextMove.get("x") && pos.getSecond() == nextMove.get("y")) {
-				proposal += " and Payment " + ((Plane)getAgent()).getPlane().getBid();
+			if (pos != null && nextMove != null) {
+				if (pos.getFirst() == nextMove.get("x") && pos.getSecond() == nextMove.get("y")) {
+					proposal += " and Payment " + ((Plane)getAgent()).getPlane().getBid();
+				}
 			}
 			proposals.add(proposal);
 		}
