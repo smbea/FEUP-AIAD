@@ -1,5 +1,6 @@
 package agents;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -155,6 +156,18 @@ public class Plane extends Agent {
 					fsm.deregisterState("Move Behaviour");
 
 					System.out.println("Destination reached for Plane " + getLocalName() + "! Hope you had a good flight :)");
+					Util.nActiveResponders--;
+
+					if(Util.nActiveResponders == 0){
+						System.out.println("IMPORTANT DATA");
+						try {
+							List<String[]> dataLines = new ArrayList<>();
+							new CSVExporter(dataLines);
+						} catch(IOException e){};
+						//System.out.println("ACCEPTED PROPOSALS: " + (Util.totalAcceptedProposals/Util.totalProposals)*100);
+						System.exit(0);
+					}
+
 					stop();
 					return true;
 				}
