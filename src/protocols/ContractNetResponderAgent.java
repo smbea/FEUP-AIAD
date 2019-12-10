@@ -34,9 +34,11 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		this.type = type;
 		
 		Stack<HashMap<String, Integer>> route = Util.routes.get(a.getLocalName());
-		nextMove = route.peek();
-		
-		System.out.println("hi im " + a.getLocalName() + " " + nextMove);
+		if (!route.empty()) {
+			nextMove = route.peek();
+		} else {
+			((Plane)getAgent()).manageBehaviour("centralized");
+		}
 	}
 
 	/**
@@ -86,6 +88,10 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 			
 			Util.confirmedConflictCounter--;
 			
+			if (Util.confirmedConflictCounter == 0) {
+				Util.conflict = false;
+			}
+			
 			((Plane)getAgent()).manageBehaviour("centralized");
 			
 			return inform;
@@ -117,9 +123,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		if (position != null) {
 			int distance = ((Plane)getAgent()).getPlane().getDistanceLeft() - 1; 
 			
-			// move
-			((Plane)getAgent()).setActualPos(position);
-			((Plane)getAgent()).setDistanceLeft(distance);
+			((Plane)getAgent()).getPlane().setActualPos(position);
+			((Plane)getAgent()).getPlane().setDistanceLeft(distance);
 
 			return true;
 		}
