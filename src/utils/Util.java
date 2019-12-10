@@ -232,6 +232,29 @@ public class Util {
 		return null;
 	}
 	
+	public static int createBestProposalRoute(String agentName, String proposal, Pair<Integer, Integer> actualPos, int xf, int yf) {
+		Pair<Integer, Integer> position = calculatePosition(proposal, actualPos);
+		
+		if (position != null) {
+			Stack<HashMap<String, Integer>> routeCoords = new Stack<>();
+			int xi = position.getFirst();
+			int yi = position.getSecond();
+			
+			Node node = Util.findPath(xi, yi, xf, yf);
+			
+			saveRoute(node, routeCoords);
+			Util.routes.replace(agentName, routeCoords);
+			
+			System.out.println("Agent " + agentName + " is generating a new route ....");
+			System.out.print("Shortest path is: ");
+			Util.printPath(node);
+	
+			return 0;
+		}
+		
+		return -1;
+	}
+	
 	public static int createPossibleRoute(String proposal, Pair<Integer, Integer> actualPos, int xf, int yf) {
 		Pair<Integer, Integer> position = calculatePosition(proposal, actualPos);
 		
