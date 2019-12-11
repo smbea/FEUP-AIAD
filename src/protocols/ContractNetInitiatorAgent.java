@@ -26,6 +26,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	private ACLMessage cfp;
 	private int nResponders = Util.nResponders;
 	private int handledResponders = 0;
+	boolean timeout = false;
 
 	public ContractNetInitiatorAgent(Agent a, ACLMessage cfp) {
 		super(a, cfp);
@@ -48,6 +49,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	public Vector prepareCfps(ACLMessage cfp) {
 		Vector v = new Vector(1);
 		v.addElement(this.cfp);
+		System.out.println("oizao");
 		return v;
 	}
 
@@ -74,7 +76,8 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	protected void handleAllResponses(Vector responses, Vector acceptances) {
 		if (responses.size() < nResponders) {
 			// Some responder didn't reply within the specified timeout
-			System.out.println("Waiting for more proposals....");
+			System.out.println("Timeout expired: missing " + (nResponders - responses.size()) + " proposals");
+			timeout = true;
 		}
 
 		// Evaluate proposals.
@@ -111,8 +114,12 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 				ACLMessage msg = (ACLMessage) e.nextElement();
 				if (msg.getPerformative() == ACLMessage.PROPOSE) {
 					ACLMessage reply = msg.createReply();
+					
 					reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 					acceptances.addElement(reply);
+					
+					cfp.removeReceiver(msg.getSender());
+					nResponders--;
 				}
 			}
 		} else {
@@ -175,4 +182,17 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 			((ATC)getAgent()).manageBehaviour("centralized");
 		}
 	}
+	
+	 @Override
+     public int onEnd() {
+		 int ret = super.onEnd();
+		 
+		 if(timeout) {
+			 System.out.println("Resetting due to timeout.......");
+			 reset(cfp);
+			 myAgent.addBehaviour(this);
+		 }
+		 
+	     return ret;
+     }
 }
