@@ -222,7 +222,7 @@ public class Plane extends Agent {
 
 					block();
 
-					if (firstIterationOver && !isOver() /*&&!Util.conflict */) {
+					if (firstIterationOver && !isOver()) {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName()

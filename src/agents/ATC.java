@@ -1,13 +1,8 @@
 package agents;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 import java.util.Stack;
 
 import jade.core.AID;
@@ -22,7 +17,6 @@ import jade.domain.FIPANames;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.lang.acl.ACLMessage;
-import jade.wrapper.AgentController;
 import protocols.ContractNetInitiatorAgent;
 import swinginterface.GraphicInterface;
 import swinginterface.GraphicsDemo;
@@ -106,7 +100,7 @@ public class ATC extends Agent {
 		}
 	}
 
-	protected Behaviour negotiationBehaviour() {
+	public Behaviour negotiationBehaviour() {
 		return (new OneShotBehaviour(this) {
 			@Override
 			public void action() {
@@ -226,8 +220,7 @@ public class ATC extends Agent {
 							traffic[Integer.parseInt(coord[0])][Integer.parseInt(coord[1])] = msg.getSender()
 								.getLocalName();
 					} else {
-						System.out.println(msg.getContent());
-						System.out.println("Not traffic");
+						System.out.println("Timeout expired!");
 					}
 				}
 			}

@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Stack;
 import java.util.Map.Entry;
 
+import agents.ATC;
 import agents.Plane;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
@@ -40,8 +41,6 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		} else {
 			((Plane)getAgent()).manageBehaviour("centralized");
 		}
-		
-		System.out.println("sou " + a.getLocalName());
 	}
 
 	/**

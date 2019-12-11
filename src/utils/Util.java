@@ -21,6 +21,7 @@ public class Util {
 	public static int mapSize;
 	public static int totalAcceptedProposals = 0;
 	public static int totalProposals = 0;
+	public static boolean timeout = false;
 
 	// Below arrays details all 8 possible movements from a cell
 	private static int[] row = { -1, 0, 0, 1, -1, -1, 1, 1 };

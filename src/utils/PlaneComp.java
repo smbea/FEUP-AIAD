@@ -13,7 +13,7 @@ public class PlaneComp extends PlanePersonality
 	/**
 	 * Plane average speed of 100km/h (kilometers per hour)
 	 */
-	int speed = 50;
+	int speed = 100;
 	int moneyAvailable = 100;
 	int bid = 10;
 

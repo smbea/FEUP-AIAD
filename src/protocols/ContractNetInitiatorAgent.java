@@ -1,7 +1,6 @@
 package protocols;
 
 import jade.core.Agent;
-import jade.domain.FIPAAgentManagement.FailureException;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
@@ -11,13 +10,12 @@ import utils.Pair;
 import utils.Util;
 
 import java.util.Vector;
-import java.util.concurrent.TimeoutException;
 
 import agents.ATC;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 
 @SuppressWarnings("serial")
@@ -26,7 +24,6 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 	private ACLMessage cfp;
 	private int nResponders = Util.nResponders;
 	private int handledResponders = 0;
-	boolean timeout = false;
 
 	public ContractNetInitiatorAgent(Agent a, ACLMessage cfp) {
 		super(a, cfp);
@@ -38,18 +35,14 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		
 		Util.negotiation = true;
 
-		System.out.println("\n****************************");
-		System.out.println("***                      ***");
-		System.out.println("***  START NEGOTIATION   ***");
-		System.out.println("***                      ***");
-		System.out.println("****************************\n");
+		System.out.println("\n");
+		
 		System.out.println(this.cfp.getContent());
 	}
 	
 	public Vector prepareCfps(ACLMessage cfp) {
 		Vector v = new Vector(1);
 		v.addElement(this.cfp);
-		System.out.println("oizao");
 		return v;
 	}
 
@@ -77,7 +70,12 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		if (responses.size() < nResponders) {
 			// Some responder didn't reply within the specified timeout
 			System.out.println("Timeout expired: missing " + (nResponders - responses.size()) + " proposals");
-			timeout = true;
+			Util.timeout = true;
+			
+			if (responses.size() == 0) {
+				System.out.println("Fatal error");
+				System.exit(0);
+			}
 		}
 
 		// Evaluate proposals.
@@ -113,6 +111,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 			while (e.hasMoreElements()) {
 				ACLMessage msg = (ACLMessage) e.nextElement();
 				if (msg.getPerformative() == ACLMessage.PROPOSE) {
+					Iterator it = cfp.getAllIntendedReceiver();
 					ACLMessage reply = msg.createReply();
 					
 					reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
@@ -150,6 +149,10 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 				accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			}
 		}
+		
+		if(Util.timeout) {
+			((ATC)agent).manageBehaviour("centralized");
+		}
 	}
 
 	protected void handleInform(ACLMessage inform) {
@@ -179,20 +182,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		
 		if (handledResponders == nResponders) {
 			Util.negotiation = false;
-			((ATC)getAgent()).manageBehaviour("centralized");
+			((ATC)agent).manageBehaviour("centralized");
 		}
 	}
-	
-	 @Override
-     public int onEnd() {
-		 int ret = super.onEnd();
-		 
-		 if(timeout) {
-			 System.out.println("Resetting due to timeout.......");
-			 reset(cfp);
-			 myAgent.addBehaviour(this);
-		 }
-		 
-	     return ret;
-     }
 }
