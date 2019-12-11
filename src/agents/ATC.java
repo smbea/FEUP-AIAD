@@ -31,7 +31,7 @@ import utils.Util;
 
 @SuppressWarnings("serial")
 public class ATC extends Agent {
-	String[][] traffic = new String[5][5];
+	String[][] traffic = new String[8][8];
 	boolean comm = false;
 	String method;
 	private AMSAgentDescription[] agents = null;

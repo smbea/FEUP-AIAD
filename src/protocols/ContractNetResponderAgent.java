@@ -40,6 +40,8 @@ public class ContractNetResponderAgent extends ContractNetResponder {
 		} else {
 			((Plane)getAgent()).manageBehaviour("centralized");
 		}
+		
+		System.out.println("sou " + a.getLocalName());
 	}
 
 	/**

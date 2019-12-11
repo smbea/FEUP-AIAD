@@ -24,13 +24,13 @@ public class GraphicInterface {
 
     public GraphicInterface(String[][] traffic) {
         frame = new JFrame();
-        frame.setBounds(100, 100, 500, 500);
+        frame.setBounds(100, 100, traffic.length*100, traffic.length*100);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
         graphicsPanel = new GraphicsDemo(traffic);
         graphicsPanel.setLayout(new BorderLayout(0, 0));
-        graphicsPanel.setBounds(0, 0, 500, 500);
+        graphicsPanel.setBounds(0, 0, traffic.length*100, traffic.length*100);
         graphicsPanel.setVisible(false);
 
         frame.getContentPane().add(graphicsPanel);

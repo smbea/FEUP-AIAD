@@ -1,6 +1,7 @@
 package protocols;
 
 import jade.core.Agent;
+import jade.domain.FIPAAgentManagement.FailureException;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
@@ -10,10 +11,12 @@ import utils.Pair;
 import utils.Util;
 
 import java.util.Vector;
+import java.util.concurrent.TimeoutException;
 
 import agents.ATC;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -30,6 +33,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		this.cfp = cfp;
 
 		this.cfp.setContent("Start: Agent " + agent.getLocalName() + " is requesting proposals");
+		//this.cfp.setReplyByDate(new Date(System.currentTimeMillis() + 60000));
 		
 		Util.negotiation = true;
 
@@ -72,6 +76,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 			// Some responder didn't reply within the specified timeout
 			System.out.println("Waiting for more proposals....");
 		}
+
 		// Evaluate proposals.
 		int counter = 0;
 		double bestProposal = -1;
@@ -92,7 +97,7 @@ public class ContractNetInitiatorAgent extends ContractNetInitiator {
 		
 		boolean equilibrium = true;
 		
-		for (int i = 0; i < destinations.size() - 1; i++) {
+		for (int i = 0; i < destinations.size() - 2; i++) {
 			if (destinations.get(i).getFirst() == destinations.get(i+1).getFirst()
 				&& destinations.get(i).getSecond() == destinations.get(i).getSecond()) {
 				equilibrium = false;

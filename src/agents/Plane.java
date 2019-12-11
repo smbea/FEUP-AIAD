@@ -184,7 +184,7 @@ public class Plane extends Agent {
 					ACLMessage answer = new ACLMessage(ACLMessage.INFORM);
 					answer = blockingReceive();
 
-					if (answer.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
+					if (answer.getPerformative() == ACLMessage.REJECT_PROPOSAL /*&& !Util.negotiation*/) {
 						System.out.println("Conflict detected! Agent " + getAgent().getLocalName()
 								+ " is starting negotiations...");
 
@@ -201,7 +201,7 @@ public class Plane extends Agent {
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
-					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && !Util.conflict) {
+					} else if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL) {
 						if (answer.getContent().contains("Route_Generated")) {
 							int index = answer.getContent().indexOf(':');
 							int distanceLeft = Integer.parseInt(answer.getContent().substring(index+1));
@@ -222,7 +222,7 @@ public class Plane extends Agent {
 
 					block();
 
-					if (firstIterationOver && !isOver()) {
+					if (firstIterationOver && !isOver() /*&&!Util.conflict */) {
 						try {
 							ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 							msg.setContent("Request_Move: Agent Plane " + this.getAgent().getLocalName()

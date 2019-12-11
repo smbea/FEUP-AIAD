@@ -21,10 +21,10 @@ public class Util {
 	public static int mapSize;
 	public static int totalAcceptedProposals = 0;
 	public static int totalProposals = 0;
-	
+
 	// Below arrays details all 8 possible movements from a cell
-	private static int[] row = { -1, 0, 0, 1, -1, -1, 1, 1};
-	private static int[] col = { 0, -1, 1, 0, -1, 1, -1, 1};
+	private static int[] row = { -1, 0, 0, 1, -1, -1, 1, 1 };
+	private static int[] col = { 0, -1, 1, 0, -1, 1, -1, 1 };
 
 	String genCID(String cidBase, int cidCnt, String name) {
 		if (cidBase == null) {
@@ -36,13 +36,14 @@ public class Util {
 	public static void move(String agentName, PlanePersonality plane) {
 		Stack<HashMap<String, Integer>> route = routes.get(agentName);
 		HashMap<String, Integer> nextMove = route.pop();
-		
-		if (nextMove.get("x") == plane.getActualPos().getFirst() && nextMove.get("y") == plane.getActualPos().getSecond()) {
+
+		if (nextMove.get("x") == plane.getActualPos().getFirst()
+				&& nextMove.get("y") == plane.getActualPos().getSecond()) {
 			nextMove = route.pop();
 		}
 
 		plane.setActualPos(new Pair<>(nextMove.get("x"), nextMove.get("y")));
-		plane.setDistanceLeft(plane.getDistanceLeft()-1);
+		plane.setDistanceLeft(plane.getDistanceLeft() - 1);
 	}
 
 	public static boolean checkConflict(String[] actualPos, String[][] traffic, String name) {
@@ -50,81 +51,51 @@ public class Util {
 		int actY = Integer.parseInt(actualPos[1]);
 		int size = traffic.length;
 
-		// check DDR
-		if (actX + 1 < size && actY + 1 < size) {
-			if (!traffic[actX + 1][actY + 1].equals("null")) {
-				conflicts.put(name, traffic[actX + 1][actY + 1]);
-				conflicts.put(traffic[actX + 1][actY + 1], name);
+		for (int i = 1; i <= 2 ; i++) {
+			// check DDR
+			if (actX + i < size && actY + i < size && !traffic[actX + i][actY + i].equals("null"))  {
 				return true;
 			}
-		}
-
-		// check DDL
-		if (actX + 1 < size && actY - 1 >= 0) {
-			if (!traffic[actX + 1][actY - 1].equals("null")) {
-				conflicts.put(name, traffic[actX + 1][actY - 1]);
-				conflicts.put(traffic[actX + 1][actY - 1], name);
+	
+			// check DDL
+			if (actX + i < size && actY - i >= 0 && !traffic[actX + i][actY - i].equals("null")) {
 				return true;
 			}
-		}
-
-		// check DUL
-		if (actX - 1 >= 0 && actY - 1 >= 0) {
-			if (!traffic[actX - 1][actY - 1].equals("null")) {
-				conflicts.put(name, traffic[actX - 1][actY - 1]);
-				conflicts.put(traffic[actX - 1][actY - 1], name);
+	
+			// check DUL
+			if (actX - i >= 0 && actY - i >= 0 && !traffic[actX - i][actY - i].equals("null")) {
 				return true;
 			}
-		}
-
-		// check DUR
-		if (actX - 1 >= 0 && actY + 1 < size) {
-			if (!traffic[actX - 1][actY + 1].equals("null")) {
-				conflicts.put(name, traffic[actX - 1][actY + 1]);
-				conflicts.put(traffic[actX - 1][actY + 1], name);
+	
+			// check DUR
+			if (actX - i >= 0 && actY + i < size && !traffic[actX - i][actY + i].equals("null")) {
 				return true;
 			}
-		}
-
-		// check U
-		if (actX - 1 >= 0) {
-			if (!traffic[actX - 1][actY].equals("null")) {
-				conflicts.put(name, traffic[actX - 1][actY]);
-				conflicts.put(traffic[actX - 1][actY], name);
+	
+			// check U
+			if (actX - i >= 0 && !traffic[actX - i][actY].equals("null")) {
 				return true;
 			}
-		}
-
-		// check D
-		if (actX + 1 < size) {
-			if (!traffic[actX + 1][actY].equals("null")) {
-				conflicts.put(name, traffic[actX + 1][actY]);
-				conflicts.put(traffic[actX + 1][actY], name);
+	
+			// check D
+			if (actX + i < size && !traffic[actX + i][actY].equals("null")) {
 				return true;
 			}
-		}
-
-		// check R
-		if (actY + 1 < size) {
-			if (!traffic[actX][actY + 1].equals("null")) {
-				conflicts.put(name, traffic[actX][actY + 1]);
-				conflicts.put(traffic[actX][actY + 1], name);
+	
+			// check R
+			if (actY + i < size && !traffic[actX][actY + i].equals("null")) {
 				return true;
 			}
-		}
-
-		// check L
-		if (actY - 1 >= 0) {
-			if (!traffic[actX][actY - 1].equals("null")) {
-				conflicts.put(name, traffic[actX][actY - 1]);
-				conflicts.put(traffic[actX][actY - 1], name);
+	
+			// check L
+			if (actY - i >= 0 && !traffic[actX][actY - i].equals("null")) {
 				return true;
 			}
 		}
 
 		return false;
 	}
-	
+
 	/**
 	 * 
 	 * @param node
@@ -138,19 +109,19 @@ public class Util {
 		System.out.print(node + " ");
 		return len + 1;
 	}
-	
+
 	public static int saveRoute(Node node, Stack<HashMap<String, Integer>> coords) {
 		HashMap<String, Integer> coord = new HashMap<String, Integer>();
-		
-		if(node == null) {
+
+		if (node == null) {
 			return 0;
 		}
-		
+
 		coord.put("x", node.x);
 		coord.put("y", node.y);
-		
+
 		coords.push(coord);
-		
+
 		int len = saveRoute(node.parent, coords);
 
 		return len + 1;
@@ -158,6 +129,7 @@ public class Util {
 
 	/**
 	 * Determine whether position is valid. If not, return false.
+	 * 
 	 * @param x
 	 * @param y
 	 * @param size
@@ -168,8 +140,9 @@ public class Util {
 	}
 
 	/**
-	 * Method to find shortest path to destination aplying BFS algorithm.
-	 * Other planes are not considered as obstacles so that conflicts may occur.
+	 * Method to find shortest path to destination aplying BFS algorithm. Other
+	 * planes are not considered as obstacles so that conflicts may occur.
+	 * 
 	 * @param traffic
 	 * @param x
 	 * @param y
@@ -177,8 +150,7 @@ public class Util {
 	 * @param destY
 	 * @return
 	 */
-	public static Node findPath(int x, int y, int destX, int destY)
-	{
+	public static Node findPath(int x, int y, int destX, int destY) {
 		// create a queue and enqueue first node
 		Queue<Node> q = new ArrayDeque<>();
 		Node src = new Node(x, y, null);
@@ -191,8 +163,7 @@ public class Util {
 		visited.add(key);
 
 		// run till queue is not empty
-		while (!q.isEmpty())
-		{
+		while (!q.isEmpty()) {
 			// pop front node from queue and process it
 			Node curr = q.poll();
 			int i = curr.x, j = curr.y;
@@ -204,16 +175,14 @@ public class Util {
 
 			// check all 4 possible movements from current cell
 			// and recur for each valid movement
-			for (int k = 0; k < 8; k++)
-			{
+			for (int k = 0; k < 8; k++) {
 				// get next position coordinates using value of current cell
 				x = i + row[k];
 				y = j + col[k];
-				
+
 				// check if it is possible to go to next position
 				// from current position
-				if (isValid(x, y, mapSize))
-				{
+				if (isValid(x, y, mapSize)) {
 					// construct next cell node
 					Node next = new Node(x, y, curr);
 
@@ -226,7 +195,7 @@ public class Util {
 						visited.add(key);
 					}
 				}
-				
+
 				x = i;
 				y = j;
 			}
@@ -235,87 +204,92 @@ public class Util {
 		// return null if path is not possible
 		return null;
 	}
-	
-	public static int createBestProposalRoute(String agentName, String proposal, Pair<Integer, Integer> actualPos, int xf, int yf) {
+
+	public static int createBestProposalRoute(String agentName, String proposal, Pair<Integer, Integer> actualPos,
+			int xf, int yf) {
 		Pair<Integer, Integer> position = calculatePosition(proposal, actualPos);
-		
+
 		if (position != null) {
 			Stack<HashMap<String, Integer>> routeCoords = new Stack<>();
 			int xi = position.getFirst();
 			int yi = position.getSecond();
-			
+
 			Node node = Util.findPath(xi, yi, xf, yf);
-			
+
 			saveRoute(node, routeCoords);
 			Util.routes.replace(agentName, routeCoords);
-			
+
 			System.out.println("Agent " + agentName + " is generating a new route ....");
 			System.out.print("Shortest path is: ");
 			Util.printPath(node);
 			System.out.println();
-	
+
 			return 0;
 		}
-		
+
 		return -1;
 	}
-	
+
 	public static int createPossibleRoute(String proposal, Pair<Integer, Integer> actualPos, int xf, int yf) {
 		Pair<Integer, Integer> position = calculatePosition(proposal, actualPos);
-		
+
 		if (position != null) {
 			int xi = position.getFirst();
 			int yi = position.getSecond();
-			
+
 			Node node = Util.findPath(xi, yi, xf, yf);
-	
+
 			Stack<HashMap<String, Integer>> routeCoords = new Stack<>();
-	
+
 			return saveRoute(node, routeCoords);
 		}
-		
+
 		return -1;
 	}
 
 	public static Pair<Integer, Integer> calculatePosition(String proposal, Pair<Integer, Integer> actualPos) {
-		int xi = actualPos.getFirst();
-		int yi = actualPos.getSecond();
+		if (actualPos != null) {
+			int xi = actualPos.getFirst();
+			int yi = actualPos.getSecond();
 
-		if(proposal.contains("Move down right") || proposal.contains("MDR")) {
-			xi+=1;
-			yi+=1;
-		} else if (proposal.contains("Move down left") || proposal.contains("MDL")) {
-			xi-=1;
-			yi+=1;
-		} else if (proposal.contains("Move top right") || proposal.contains("MUR")) {
-			xi+=1;
-			yi-=1;
-		} else if (proposal.contains("Move top left") || proposal.contains("MUL")) {
-			xi-=1;
-			yi-=1;
-		} else if (proposal.contains("Move up") || proposal.contains("MU")) {
-			yi-=1;
-		} else if (proposal.contains("Move down") || proposal.contains("MD")) {
-			yi+=1;
-		} else if (proposal.contains("Move right") || proposal.contains("MR")) {
-			xi+=1;
-		} else if (proposal.contains("Move left") || proposal.contains("ML")) {
-			xi-=1;
-		} else {
-			return null;
-		}
-		
-		if(!isValid(xi, yi, mapSize)) {
-			return null;
+			if (proposal.contains("Move down right") || proposal.contains("MDR")) {
+				xi += 1;
+				yi += 1;
+			} else if (proposal.contains("Move down left") || proposal.contains("MDL")) {
+				xi -= 1;
+				yi += 1;
+			} else if (proposal.contains("Move top right") || proposal.contains("MUR")) {
+				xi += 1;
+				yi -= 1;
+			} else if (proposal.contains("Move top left") || proposal.contains("MUL")) {
+				xi -= 1;
+				yi -= 1;
+			} else if (proposal.contains("Move up") || proposal.contains("MU")) {
+				yi -= 1;
+			} else if (proposal.contains("Move down") || proposal.contains("MD")) {
+				yi += 1;
+			} else if (proposal.contains("Move right") || proposal.contains("MR")) {
+				xi += 1;
+			} else if (proposal.contains("Move left") || proposal.contains("ML")) {
+				xi -= 1;
+			} else {
+				return null;
+			}
+
+			if (!isValid(xi, yi, mapSize)) {
+				return null;
+			}
+
+			return new Pair<Integer, Integer>(xi, yi);
 		}
 
-		return new Pair<Integer, Integer>(xi, yi);
+		return null;
 	}
-	
+
 	public static String parseMove(String moveCode) {
 		String move = null;
-		
-		switch(moveCode) {
+
+		switch (moveCode) {
 		case "MU":
 			move = "up";
 			break;
@@ -343,14 +317,14 @@ public class Util {
 		default:
 			break;
 		}
-		
+
 		return move;
 	}
-	
+
 	public static String parseStringMove(String move) {
 		String moveCode = null;
-		
-		switch(move) {
+
+		switch (move) {
 		case "up":
 			moveCode = "MU";
 			break;
@@ -378,10 +352,10 @@ public class Util {
 		default:
 			break;
 		}
-		
+
 		return moveCode;
 	}
-	
+
 	public static Pair<Integer, Integer> findAgentMap(String agent, String[][] traffic) {
 		for (int i = 0; i < traffic.length; i++) {
 			for (int j = 0; j < traffic.length; j++) {
@@ -390,7 +364,7 @@ public class Util {
 				}
 			}
 		}
-		
+
 		return null;
 	}
 
