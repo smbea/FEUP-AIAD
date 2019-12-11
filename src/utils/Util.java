@@ -16,8 +16,11 @@ public class Util {
 	public static boolean negotiation = false;
 	public static int confirmedConflictCounter = 0;
 	public static int nResponders;
+	public static int nActiveResponders;
 	public static HashMap<String, Stack<HashMap<String, Integer>>> routes = new HashMap<String, Stack<HashMap<String, Integer>>>();
 	public static int mapSize;
+	public static int totalAcceptedProposals = 0;
+	public static int totalProposals = 0;
 	
 	// Below arrays details all 8 possible movements from a cell
 	private static int[] row = { -1, 0, 0, 1, -1, -1, 1, 1};

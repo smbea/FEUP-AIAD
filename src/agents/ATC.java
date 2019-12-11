@@ -291,6 +291,7 @@ public class ATC extends Agent {
 						&& !agents[index].getName().getLocalName().equals("ams")
 						&& !agents[index].getName().getLocalName().equals(this.getLocalName())) {
 					Util.nResponders++;
+					Util.nActiveResponders++;
 				}
 			}
 		} catch (Exception e) {
